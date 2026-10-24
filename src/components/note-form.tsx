@@ -30,7 +30,7 @@ export function NoteForm({
           maxLength={NOTE_MAX_LENGTH}
           aria-invalid={state.error ? true : undefined}
           aria-describedby={state.error ? "note-body-error" : undefined}
-          className="min-h-24 bg-card text-base"
+          className="min-h-24 text-base"
         />
         {state.error && <FieldError id="note-body-error">{state.error}</FieldError>}
       </Field>

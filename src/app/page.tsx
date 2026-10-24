@@ -20,16 +20,19 @@ import { formatContactCount, formatNumber } from "@/lib/format";
 export default function ContactsPage({ searchParams }: PageProps<"/">) {
   return (
     <main className="group/contacts flex flex-col gap-4">
-      <header className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">Контакты</h1>
-        <Link href="/contacts/new" className={buttonVariants({ size: "lg", className: "h-10 px-4" })}>
-          <PlusIcon data-icon="inline-start" />
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b-2 border-ink pb-3">
+        <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">Контакты</h1>
+        <Link
+          href="/contacts/new"
+          className="inline-flex h-10 items-center gap-1.5 text-sm font-medium whitespace-nowrap text-accent hover:opacity-80"
+        >
+          <PlusIcon className="size-4" aria-hidden="true" />
           Добавить контакт
         </Link>
       </header>
 
       {/* Stays on screen while scrolling a long list, so search is always one click away. */}
-      <div className="sticky top-0 z-10 -mx-4 bg-muted/85 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="sticky top-0 z-10 -mx-6 bg-background/92 px-6 py-2 backdrop-blur-sm">
         <Suspense fallback={<SearchInputFallback />}>
           <SearchInput />
         </Suspense>
@@ -52,7 +55,7 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
 
   if (totalCount === 0) {
     return (
-      <Empty className="border bg-card py-12">
+      <Empty className="border border-input py-12">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <UsersIcon />
@@ -72,7 +75,7 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
 
   if (contacts.length === 0) {
     return (
-      <Empty className="border bg-card py-12">
+      <Empty className="border border-input py-12">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <SearchXIcon />
@@ -93,12 +96,12 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
 
   return (
     <section className="flex flex-col gap-2" aria-label="Список контактов">
-      <p className="text-sm text-muted-foreground" aria-live="polite">
+      <p className="text-13 text-subtle" aria-live="polite">
         {search
           ? `Найдено: ${formatNumber(contacts.length)} из ${formatNumber(totalCount)}`
           : `Всего: ${formatContactCount(totalCount)}`}
       </p>
-      <ul className="divide-y overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
+      <ul className="divide-y divide-line-soft overflow-hidden rounded-card border bg-card lg:shadow-card">
         {contacts.map((contact) => (
           // Rows outside the screen are not painted until scrolled to: keeps a thousand rows cheap.
           <li key={contact.id} className="[contain-intrinsic-size:auto_4rem] [content-visibility:auto]">
@@ -116,20 +119,20 @@ function ContactRow({ contact }: { contact: ContactListItem }) {
   return (
     <Link
       href={`/contacts/${contact.id}`}
-      className="flex h-16 items-center gap-3 px-4 outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted"
+      className="flex h-16 items-center gap-3 px-4 outline-none transition-colors hover:bg-field focus-visible:bg-field"
     >
       <ContactAvatar name={contact.name} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-medium">{contact.name}</span>
-        {subtitle && <span className="block truncate text-sm text-muted-foreground">{subtitle}</span>}
+        <span className="block truncate font-serif text-17">{contact.name}</span>
+        {subtitle && <span className="block truncate text-13 text-subtle">{subtitle}</span>}
       </span>
       {(contact.phone || contact.email) && (
-        <span className="hidden max-w-56 shrink-0 text-right text-sm text-muted-foreground sm:block">
+        <span className="hidden max-w-56 shrink-0 text-right text-13 text-subtle sm:block">
           {contact.phone && <span className="block truncate tabular-nums">{contact.phone}</span>}
           {contact.email && <span className="block truncate">{contact.email}</span>}
         </span>
       )}
-      <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground/60" aria-hidden="true" />
+      <ChevronRightIcon className="size-4 shrink-0 text-placeholder" aria-hidden="true" />
     </Link>
   );
 }
@@ -138,7 +141,7 @@ function ContactListSkeleton() {
   return (
     <div className="flex flex-col gap-2" aria-hidden="true">
       <Skeleton className="h-5 w-36" />
-      <div className="divide-y overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
+      <div className="divide-y divide-line-soft overflow-hidden rounded-card border bg-card">
         {Array.from({ length: 8 }, (_, index) => (
           <div key={index} className="flex h-16 items-center gap-3 px-4">
             <Skeleton className="size-10 rounded-full" />

@@ -26,7 +26,7 @@ export default function ErrorPage({
 
   return (
     <main>
-      <Empty className="border bg-card py-12">
+      <Empty className="border border-input py-12">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <TriangleAlertIcon />

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <main>
-      <Empty className="border bg-card py-12">
+      <Empty className="border border-input py-12">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <SearchXIcon />

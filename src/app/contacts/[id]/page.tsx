@@ -43,11 +43,11 @@ async function ContactCard({ params }: { params: Params }) {
 
   return (
     <>
-      <header className="flex items-start gap-4">
+      <header className="flex flex-wrap items-start gap-4">
         <ContactAvatar name={contact.name} size="lg" />
-        <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-semibold tracking-tight break-words">{contact.name}</h1>
-          {contact.about && <p className="mt-0.5 break-words text-muted-foreground">{contact.about}</p>}
+        <div className="min-w-0 flex-1 basis-48">
+          <h1 className="font-serif text-2xl font-normal tracking-[-0.015em] break-words lg:text-3xl">{contact.name}</h1>
+          {contact.about && <p className="mt-1 break-words text-muted-foreground">{contact.about}</p>}
         </div>
         <Link
           href={`/contacts/${contact.id}/edit`}
@@ -58,18 +58,18 @@ async function ContactCard({ params }: { params: Params }) {
         </Link>
       </header>
 
-      <dl className="divide-y rounded-xl bg-card ring-1 ring-foreground/10">
+      <dl className="divide-y divide-line-soft rounded-card border bg-card lg:shadow-card">
         <DetailRow label="Откуда знакомы">{contact.howMet}</DetailRow>
         <DetailRow label="Телефон">
           {contact.phone && (
-            <a href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`} className="underline-offset-4 hover:underline">
+            <a href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`} className="text-accent hover:opacity-80">
               {contact.phone}
             </a>
           )}
         </DetailRow>
         <DetailRow label="Почта">
           {contact.email && (
-            <a href={`mailto:${contact.email}`} className="underline-offset-4 hover:underline">
+            <a href={`mailto:${contact.email}`} className="text-accent hover:opacity-80">
               {contact.email}
             </a>
           )}
@@ -81,28 +81,26 @@ async function ContactCard({ params }: { params: Params }) {
 
       <section className="flex flex-col gap-4" aria-labelledby="notes-heading">
         <div className="flex items-baseline gap-2">
-          <h2 id="notes-heading" className="text-lg font-semibold tracking-tight">
+          <h2 id="notes-heading" className="font-serif text-22 font-normal tracking-[-0.015em]">
             Заметки
           </h2>
-          {notes.length > 0 && (
-            <span className="text-sm text-muted-foreground">{formatNoteCount(notes.length)}</span>
-          )}
+          {notes.length > 0 && <span className="text-13 text-subtle">{formatNoteCount(notes.length)}</span>}
         </div>
 
         <NoteForm action={addNote.bind(null, contact.id)} />
 
         {notes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-subtle">
             Заметок пока нет. Запишите после разговора, о чём говорили и о чём договорились.
           </p>
         ) : (
           <ol className="flex flex-col gap-3">
             {notes.map((note) => (
-              <li key={note.id} className="rounded-xl bg-card px-4 py-3 ring-1 ring-foreground/10">
-                <time dateTime={note.createdAt.toISOString()} className="text-xs text-muted-foreground">
+              <li key={note.id} className="rounded-card border bg-card px-5 py-4">
+                <time dateTime={note.createdAt.toISOString()} className="text-13 text-subtle">
                   {formatDateTime(note.createdAt)}
                 </time>
-                <p className="mt-1 break-words whitespace-pre-wrap">{note.body}</p>
+                <p className="mt-1.5 break-words whitespace-pre-wrap">{note.body}</p>
               </li>
             ))}
           </ol>
@@ -114,10 +112,10 @@ async function ContactCard({ params }: { params: Params }) {
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-0.5 px-4 py-3 sm:flex-row sm:gap-4">
-      <dt className="shrink-0 text-sm text-muted-foreground sm:w-40 sm:text-base">{label}</dt>
-      <dd className="min-w-0 break-words">
-        {children || <span className="text-muted-foreground">не указано</span>}
+    <div className="flex flex-col gap-0.5 px-5 py-3.5 sm:flex-row sm:gap-4">
+      <dt className="shrink-0 text-sm text-subtle sm:w-40 sm:text-15">{label}</dt>
+      <dd className="min-w-0 break-words sm:text-15">
+        {children || <span className="font-serif text-placeholder italic">не указано</span>}
       </dd>
     </div>
   );
@@ -133,9 +131,9 @@ function ContactSkeleton() {
           <Skeleton className="h-4 w-40" />
         </div>
       </div>
-      <Skeleton className="h-48 rounded-xl" />
+      <Skeleton className="h-48" />
       <Skeleton className="h-6 w-28" />
-      <Skeleton className="h-36 rounded-xl" />
+      <Skeleton className="h-36" />
     </div>
   );
 }

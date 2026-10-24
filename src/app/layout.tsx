@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Commissioner, Literata } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-sans",
+const commissioner = Commissioner({
+  variable: "--font-commissioner",
   subsets: ["latin", "cyrillic"],
+});
+
+// The optical size axis makes big headings finer than body-size text, as on the landing.
+const literata = Literata({
+  variable: "--font-literata",
+  subsets: ["latin", "cyrillic"],
+  style: ["normal", "italic"],
+  axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
@@ -17,9 +26,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ru" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full bg-muted">
-        <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">{children}</div>
+    <html lang="ru" className={`${commissioner.variable} ${literata.variable} h-full`}>
+      <body className="min-h-full">
+        <header className="border-b border-line-soft">
+          <div className="mx-auto flex h-15 w-full max-w-3xl items-center px-6 lg:h-18">
+            <Link href="/" className="font-serif text-lg font-medium lg:text-xl">
+              Личная CRM
+            </Link>
+          </div>
+        </header>
+        <div className="mx-auto w-full max-w-3xl px-6 py-8 sm:py-12">{children}</div>
       </body>
     </html>
   );

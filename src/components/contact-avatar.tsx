@@ -1,4 +1,4 @@
-import { getAvatarColor, getInitials } from "@/lib/format";
+import { getInitials } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 // Plain markup on purpose: the list renders a thousand of these, so no client-side code per avatar.
@@ -15,9 +15,8 @@ export function ContactAvatar({
     <span
       aria-hidden="true"
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full font-medium select-none",
-        size === "lg" ? "size-14 text-lg" : "size-10 text-sm",
-        getAvatarColor(name),
+        "flex shrink-0 items-center justify-center rounded-full border bg-field font-serif text-muted-foreground select-none",
+        size === "lg" ? "size-14 text-xl" : "size-10 text-sm",
         className,
       )}
     >

@@ -63,7 +63,7 @@ export function SearchInput() {
   }
 
   return (
-    <InputGroup className="h-10 bg-card" data-pending={isPending ? "" : undefined}>
+    <InputGroup className="h-10" data-pending={isPending ? "" : undefined}>
       <InputGroupAddon>
         {isPending ? <LoaderCircleIcon className="animate-spin" /> : <SearchIcon />}
       </InputGroupAddon>
@@ -92,7 +92,7 @@ export function SearchInput() {
 // Shown in the prerendered page shell until the real input can read the URL.
 export function SearchInputFallback() {
   return (
-    <InputGroup className="h-10 bg-card">
+    <InputGroup className="h-10">
       <InputGroupAddon>
         <SearchIcon />
       </InputGroupAddon>

@@ -37,7 +37,7 @@ async function EditContact({ params }: { params: Params }) {
   return (
     <>
       <BackLink href={cardHref}>{contact.name}</BackLink>
-      <h1 className="text-2xl font-semibold tracking-tight">Редактирование контакта</h1>
+      <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">Редактирование контакта</h1>
       <ContactForm
         // A saved change gives the form a new key, so it never shows values from before the save.
         key={contact.updatedAt.toISOString()}
@@ -66,7 +66,7 @@ function EditContactSkeleton() {
         {Array.from({ length: 5 }, (_, index) => (
           <div key={index} className="flex flex-col gap-2">
             <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-10 rounded-lg" />
+            <Skeleton className="h-10" />
           </div>
         ))}
       </div>

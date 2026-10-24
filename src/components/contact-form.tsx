@@ -103,7 +103,7 @@ function ContactFormFields({
       ref={formRef}
       action={formAction}
       noValidate
-      className="flex flex-col gap-6 rounded-xl bg-card p-4 ring-1 ring-foreground/10 sm:p-6"
+      className="flex flex-col gap-6 rounded-card border bg-card p-5 sm:p-8 lg:shadow-card"
     >
       <FieldGroup>
         {FIELDS.map((field) => {
@@ -142,7 +142,7 @@ function ContactFormFields({
       </FieldGroup>
 
       {state.formError && (
-        <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p role="alert" className="rounded-control bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {state.formError}
         </p>
       )}
