@@ -38,3 +38,11 @@ export const initialNoteFormState: NoteFormState = {
   body: "",
   error: null,
 };
+
+export type DeleteContactState = {
+  error: string | null;
+};
+
+export const initialDeleteContactState: DeleteContactState = {
+  error: null,
+};

@@ -11,12 +11,15 @@ import type {
   ContactFormField,
   ContactFormState,
   ContactFormValues,
+  DeleteContactState,
   NoteFormState,
 } from "@/lib/contact-form";
 import { contactSchema, noteSchema } from "@/lib/validation";
 
 const SAVE_FAILED_MESSAGE =
   "Не удалось сохранить. Проверьте, что база данных запущена, и попробуйте ещё раз.";
+const DELETE_FAILED_MESSAGE =
+  "Не удалось удалить. Проверьте, что база данных запущена, и попробуйте ещё раз.";
 const CONTACT_NOT_FOUND_MESSAGE =
   "Этот контакт не найден. Вернитесь к списку и откройте его заново.";
 
@@ -103,6 +106,28 @@ export async function updateContact(
 
   revalidatePath("/", "layout");
   redirect(`/contacts/${contactId}`);
+}
+
+// The contact's notes go with it: notes.contact_id is declared ON DELETE CASCADE.
+export async function deleteContact(contactId: number): Promise<DeleteContactState> {
+  if (!isValidId(contactId)) {
+    return { error: CONTACT_NOT_FOUND_MESSAGE };
+  }
+
+  let deletedRows: { id: number }[];
+  try {
+    deletedRows = await db.delete(contacts).where(eq(contacts.id, contactId)).returning({ id: contacts.id });
+  } catch (error) {
+    console.error("Failed to delete contact", error);
+    return { error: DELETE_FAILED_MESSAGE };
+  }
+  // Nothing deleted: the contact is already gone, for example deleted in another tab.
+  if (deletedRows.length === 0) {
+    return { error: CONTACT_NOT_FOUND_MESSAGE };
+  }
+
+  revalidatePath("/", "layout");
+  redirect("/");
 }
 
 export async function addNote(
