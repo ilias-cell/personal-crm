@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { updateContact } from "@/app/actions";
+import { deleteContact, updateContact } from "@/app/actions";
 import { BackLink } from "@/components/back-link";
 import { ContactForm } from "@/components/contact-form";
+import { DeleteContact } from "@/components/delete-contact";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getContact, parseContactId } from "@/lib/contacts";
+import { countNotes, getContact, parseContactId } from "@/lib/contacts";
 
 type Params = PageProps<"/contacts/[id]/edit">["params"];
 
@@ -29,7 +30,7 @@ async function EditContact({ params }: { params: Params }) {
   const contactId = parseContactId(id);
   if (contactId === null) notFound();
 
-  const contact = await getContact(contactId);
+  const [contact, noteCount] = await Promise.all([getContact(contactId), countNotes(contactId)]);
   if (!contact) notFound();
 
   const cardHref = `/contacts/${contact.id}`;
@@ -53,6 +54,18 @@ async function EditContact({ params }: { params: Params }) {
         pendingLabel="Сохраняю…"
         cancelHref={cardHref}
       />
+
+      {/* Kept far from "Save" and in its own form, so it is never hit by accident. */}
+      <section className="flex flex-col gap-3 border-t border-line-soft pt-6" aria-labelledby="delete-heading">
+        <h2 id="delete-heading" className="font-serif text-22 font-normal tracking-[-0.015em]">
+          Удаление
+        </h2>
+        <DeleteContact
+          action={deleteContact.bind(null, contact.id)}
+          contactName={contact.name}
+          noteCount={noteCount}
+        />
+      </section>
     </>
   );
 }
