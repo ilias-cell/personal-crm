@@ -1,0 +1,14 @@
+# Keeps secrets and local clutter out of the build context.
+.env
+.env.*
+.git
+.github
+.claude
+.next
+node_modules
+build
+deploy
+specs
+*.md
+*.tsbuildinfo
+.DS_Store

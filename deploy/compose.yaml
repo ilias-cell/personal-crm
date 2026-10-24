@@ -1,0 +1,77 @@
+# Production stack on the server. Run it through deploy.sh, which sets APP_IMAGE and the project name (-p prod).
+# Database settings come from .env next to this file (never in git): POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-app-env: &app-env
+  NODE_ENV: production
+  DATABASE_URL: postgresql://${POSTGRES_USER:?set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?set POSTGRES_DB in .env}
+
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+    # No published ports: only containers of this project reach the database.
+    volumes:
+      # PostgreSQL 18+ images keep data under /var/lib/postgresql/<major>/docker.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  # One-off container: applies migrations and exits. The deploy starts the new app only if it succeeds.
+  migrate:
+    image: ${APP_IMAGE:?APP_IMAGE is set by deploy.sh}
+    pull_policy: never
+    profiles: [tools]
+    command: ["node", "tools/migrate.js"]
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+    logging: *logging
+
+  # One-off container: fills an EMPTY database with test contacts (it refuses a non-empty one).
+  seed:
+    image: ${APP_IMAGE:?APP_IMAGE is set by deploy.sh}
+    pull_policy: never
+    profiles: [tools]
+    command: ["node", "tools/seed.js"]
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+    logging: *logging
+
+  app:
+    image: ${APP_IMAGE:?APP_IMAGE is set by deploy.sh}
+    pull_policy: never
+    restart: unless-stopped
+    environment: *app-env
+    ports:
+      # Localhost only: the public side is nginx with https.
+      - "127.0.0.1:3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging: *logging
+
+volumes:
+  db-data:

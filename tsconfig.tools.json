@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "rootDir": "src/db",
+    "outDir": "build/tools"
+  },
+  "include": ["src/db/migrate.ts", "src/db/seed.ts"]
+}
