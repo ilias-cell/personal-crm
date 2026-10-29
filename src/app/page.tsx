@@ -1,5 +1,6 @@
-import { ChevronRightIcon, PlusIcon, SearchXIcon, UsersIcon } from "lucide-react";
+import { ChevronRightIcon, ClockIcon, PlusIcon, SearchXIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 
 import { ContactAvatar } from "@/components/contact-avatar";
@@ -16,19 +17,33 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { countContacts, listContacts, type ContactListItem } from "@/lib/contacts";
 import { formatContactCount, formatNumber } from "@/lib/format";
+import { countOverdueContacts } from "@/lib/keep-in-touch";
 
 export default function ContactsPage({ searchParams }: PageProps<"/">) {
   return (
     <main className="group/contacts flex flex-col gap-4">
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b-2 border-ink pb-3">
         <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">Контакты</h1>
-        <Link
-          href="/contacts/new"
-          className="inline-flex h-10 items-center gap-1.5 text-sm font-medium whitespace-nowrap text-accent hover:opacity-80"
-        >
-          <PlusIcon className="size-4" aria-hidden="true" />
-          Добавить контакт
-        </Link>
+        <div className="flex flex-wrap items-center gap-x-6">
+          <Link
+            href="/keep-in-touch"
+            className="inline-flex h-10 items-center gap-1.5 text-sm font-medium whitespace-nowrap text-accent hover:opacity-80"
+          >
+            <ClockIcon className="size-4" aria-hidden="true" />
+            Пора связаться
+            {/* The link shows at once; the number joins it when counted, and stays away while nobody is overdue. */}
+            <Suspense fallback={null}>
+              <OverdueCount />
+            </Suspense>
+          </Link>
+          <Link
+            href="/contacts/new"
+            className="inline-flex h-10 items-center gap-1.5 text-sm font-medium whitespace-nowrap text-accent hover:opacity-80"
+          >
+            <PlusIcon className="size-4" aria-hidden="true" />
+            Добавить контакт
+          </Link>
+        </div>
       </header>
 
       {/* Stays on screen while scrolling a long list, so search is always one click away. */}
@@ -46,6 +61,14 @@ export default function ContactsPage({ searchParams }: PageProps<"/">) {
       </div>
     </main>
   );
+}
+
+async function OverdueCount() {
+  // Who is overdue depends on today's date, so it is counted on every visit, never at build time.
+  await connection();
+  const count = await countOverdueContacts();
+  if (count === 0) return null;
+  return <span className="font-semibold tabular-nums">· {formatNumber(count)}</span>;
 }
 
 async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams">) {

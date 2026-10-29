@@ -10,6 +10,7 @@ import { ContactAvatar } from "@/components/contact-avatar";
 import { NoteForm } from "@/components/note-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TOUCH_FREQUENCY_LABELS } from "@/lib/contact-form";
 import { getContact, listNotes, parseContactId } from "@/lib/contacts";
 import { formatDate, formatDateTime, formatNoteCount } from "@/lib/format";
 
@@ -73,6 +74,9 @@ async function ContactCard({ params }: { params: Params }) {
               {contact.email}
             </a>
           )}
+        </DetailRow>
+        <DetailRow label="Как часто общаться">
+          {contact.touchFrequency && TOUCH_FREQUENCY_LABELS[contact.touchFrequency]}
         </DetailRow>
         <DetailRow label="Добавлен">
           <time dateTime={contact.createdAt.toISOString()}>{formatDate(contact.createdAt)}</time>

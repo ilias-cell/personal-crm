@@ -5,20 +5,29 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import {
   EMAIL_MAX_LENGTH,
   initialContactFormState,
   NAME_MAX_LENGTH,
   PHONE_MAX_LENGTH,
   TEXT_MAX_LENGTH,
+  TOUCH_FREQUENCY_LABELS,
   type ContactFormField,
   type ContactFormState,
   type ContactFormValues,
 } from "@/lib/contact-form";
 
-const EMPTY_VALUES: ContactFormValues = { name: "", about: "", howMet: "", phone: "", email: "" };
+const EMPTY_VALUES: ContactFormValues = {
+  name: "",
+  about: "",
+  howMet: "",
+  phone: "",
+  email: "",
+  touchFrequency: "",
+};
 
 type FieldConfig = {
   name: ContactFormField;
@@ -94,7 +103,9 @@ function ContactFormFields({
 
   // After a failed save, put the cursor into the first field that needs fixing.
   useEffect(() => {
-    formRef.current?.querySelector<HTMLInputElement>('input[aria-invalid="true"]')?.focus();
+    formRef.current
+      ?.querySelector<HTMLElement>('input[aria-invalid="true"], select[aria-invalid="true"]')
+      ?.focus();
   }, [state]);
 
   return (
@@ -139,6 +150,7 @@ function ContactFormFields({
             </Field>
           );
         })}
+        <TouchFrequencyField value={values.touchFrequency} error={state.fieldErrors.touchFrequency} />
       </FieldGroup>
 
       {state.formError && (
@@ -156,5 +168,40 @@ function ContactFormFields({
         </Link>
       </div>
     </form>
+  );
+}
+
+function TouchFrequencyField({ value, error }: { value: string; error: string | undefined }) {
+  const selectId = "contact-touchFrequency";
+  const descriptionId = `${selectId}-description`;
+  const errorId = `${selectId}-error`;
+  return (
+    <Field data-invalid={error ? true : undefined}>
+      <FieldLabel htmlFor={selectId}>
+        <span>Как часто общаться</span>
+      </FieldLabel>
+      {/* After a failed save React resets the form, and a select falls back to the option it was first
+          rendered with. Keying it by the value makes it render again with the choice the user sent. */}
+      <NativeSelect
+        key={value}
+        id={selectId}
+        name="touchFrequency"
+        defaultValue={value}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${descriptionId} ${errorId}` : descriptionId}
+        className="w-full max-w-70 [&>select]:h-10 [&>select]:text-base"
+      >
+        <NativeSelectOption value="">Не задано</NativeSelectOption>
+        {Object.entries(TOUCH_FREQUENCY_LABELS).map(([frequency, label]) => (
+          <NativeSelectOption key={frequency} value={frequency}>
+            {label}
+          </NativeSelectOption>
+        ))}
+      </NativeSelect>
+      <FieldDescription id={descriptionId}>
+        Когда срок пройдёт, человек появится на странице «Пора связаться».
+      </FieldDescription>
+      {error && <FieldError id={errorId}>{error}</FieldError>}
+    </Field>
   );
 }
