@@ -49,6 +49,7 @@ async function EditContact({ params }: { params: Params }) {
           howMet: contact.howMet ?? "",
           phone: contact.phone ?? "",
           email: contact.email ?? "",
+          touchFrequency: contact.touchFrequency ?? "",
         }}
         submitLabel="Сохранить"
         pendingLabel="Сохраняю…"

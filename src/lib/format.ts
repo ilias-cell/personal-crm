@@ -1,9 +1,18 @@
+// The owner's calendar: "Пора связаться" counts days in this time zone, whatever zone the server runs in.
+export const OWNER_TIME_ZONE = "Europe/Moscow";
+
 const pluralRules = new Intl.PluralRules("ru-RU");
 const numberFormat = new Intl.NumberFormat("ru-RU");
 const dateFormat = new Intl.DateTimeFormat("ru-RU", {
   day: "numeric",
   month: "long",
   year: "numeric",
+});
+const ownerDateFormat = new Intl.DateTimeFormat("ru-RU", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: OWNER_TIME_ZONE,
 });
 const dateTimeFormat = new Intl.DateTimeFormat("ru-RU", {
   day: "numeric",
@@ -43,6 +52,18 @@ export function formatDate(date: Date): string {
 
 export function formatDateTime(date: Date): string {
   return dateTimeFormat.format(date);
+}
+
+// The day on the owner's calendar, the same one "Пора связаться" counts from.
+export function formatOwnerDate(date: Date): string {
+  return ownerDateFormat.format(date);
+}
+
+// "пора сегодня", "просрочено на 1 день", "просрочено на 3 дня", "просрочено на 16 дней".
+export function formatOverdue(days: number): string {
+  if (days === 0) return "пора сегодня";
+  const noun = pluralize(days, { one: "день", few: "дня", many: "дней" });
+  return `просрочено на ${numberFormat.format(days)} ${noun}`;
 }
 
 // Up to two initials: "Анна Смирнова" -> "АС", "Мама" -> "М".

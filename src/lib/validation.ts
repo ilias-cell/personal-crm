@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { touchFrequency } from "@/db/schema";
 import {
   EMAIL_MAX_LENGTH,
   NAME_MAX_LENGTH,
@@ -33,6 +34,10 @@ export const contactSchema = z.object({
     .refine((value) => value === "" || z.email().safeParse(value).success, {
       message: "Проверьте адрес почты: он должен выглядеть как name@example.com",
     })
+    .transform((value) => (value === "" ? null : value)),
+  // The empty choice is "Не задано" and is stored as NULL.
+  touchFrequency: z
+    .enum(["", ...touchFrequency.enumValues] as const, { message: "Выберите вариант из списка" })
     .transform((value) => (value === "" ? null : value)),
 });
 
