@@ -26,7 +26,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ru" className={`${commissioner.variable} ${literata.variable} h-full`}>
+    // data-scroll-behavior: smooth scrolling from globals.css stays within a page, but going to another page
+    // (for example the next page of the contact list from under it) jumps to its start at once.
+    <html
+      lang="ru"
+      data-scroll-behavior="smooth"
+      className={`${commissioner.variable} ${literata.variable} h-full`}
+    >
       <body className="min-h-full">
         <header className="border-b border-line-soft">
           <div className="mx-auto flex h-15 w-full max-w-3xl items-center px-6 lg:h-18">

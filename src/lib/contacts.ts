@@ -5,6 +5,7 @@ import { cache } from "react";
 
 import { db } from "@/db";
 import { contacts, notes, type Contact, type Note } from "@/db/schema";
+import { PAGE_SIZE } from "@/lib/pagination";
 
 export type ContactListItem = Pick<Contact, "id" | "name" | "about" | "howMet" | "phone" | "email">;
 
@@ -20,7 +21,8 @@ function escapeLikePattern(value: string): string {
 // Every word of the search must occur in the name, in any order.
 // Names where each word starts a name part ("анна" -> "Анна ...") go before inner matches ("Жанна ...");
 // inside each group, and without a search, the newest contacts come first.
-export async function listContacts(search: string): Promise<ContactListItem[]> {
+// The list and its count share this, so both always see the same contacts.
+function searchContacts(search: string) {
   const terms = normalizeForSearch(search).split(/\s+/).filter(Boolean).map(escapeLikePattern);
   const normalizedName = sql`translate(lower(${contacts.name}), 'ё', 'е')`;
 
@@ -32,6 +34,15 @@ export async function listContacts(search: string): Promise<ContactListItem[]> {
   const relevance =
     terms.length > 0 ? [desc(sql`(${sql.join(startsWithEveryTerm, sql` and `)})`)] : [];
 
+  return {
+    where: terms.length > 0 ? and(...containsEveryTerm) : undefined,
+    // The id makes the order unique, so pages never share or skip a contact.
+    orderBy: [...relevance, desc(contacts.createdAt), desc(contacts.id)],
+  };
+}
+
+export async function listContacts(search: string, page: number): Promise<ContactListItem[]> {
+  const { where, orderBy } = searchContacts(search);
   return db
     .select({
       id: contacts.id,
@@ -42,12 +53,15 @@ export async function listContacts(search: string): Promise<ContactListItem[]> {
       email: contacts.email,
     })
     .from(contacts)
-    .where(terms.length > 0 ? and(...containsEveryTerm) : undefined)
-    .orderBy(...relevance, desc(contacts.createdAt), desc(contacts.id));
+    .where(where)
+    .orderBy(...orderBy)
+    .limit(PAGE_SIZE)
+    .offset((page - 1) * PAGE_SIZE);
 }
 
-export async function countContacts(): Promise<number> {
-  const [row] = await db.select({ value: count() }).from(contacts);
+// Without a search, all contacts.
+export async function countContacts(search = ""): Promise<number> {
+  const [row] = await db.select({ value: count() }).from(contacts).where(searchContacts(search).where);
   return row.value;
 }
 

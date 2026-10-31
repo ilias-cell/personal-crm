@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { addNote } from "@/app/actions";
-import { BackLink } from "@/components/back-link";
+import { BackToContactList } from "@/components/back-link";
 import { ContactAvatar } from "@/components/contact-avatar";
 import { NoteForm } from "@/components/note-form";
 import { buttonVariants } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default function ContactPage({ params }: { params: Params }) {
   return (
     <main className="flex flex-col gap-6">
-      <BackLink href="/">Все контакты</BackLink>
+      <BackToContactList />
       <Suspense fallback={<ContactSkeleton />}>
         <ContactCard params={params} />
       </Suspense>

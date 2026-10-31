@@ -4,8 +4,9 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
-import { BackLink } from "@/components/back-link";
+import { BackToContactList } from "@/components/back-link";
 import { ContactAvatar } from "@/components/contact-avatar";
+import { ContactListLink } from "@/components/contact-list-link";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Empty,
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
 export default function KeepInTouchPage() {
   return (
     <main className="flex flex-col gap-4">
-      <BackLink href="/">Все контакты</BackLink>
+      <BackToContactList />
       <header className="border-b-2 border-ink pb-3">
         <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">
           Пора связаться
@@ -137,9 +138,9 @@ function NoFrequencyYet() {
 
 function AllContactsButton() {
   return (
-    <Link href="/" className={buttonVariants({ variant: "outline", size: "lg", className: "h-10 px-4" })}>
+    <ContactListLink className={buttonVariants({ variant: "outline", size: "lg", className: "h-10 px-4" })}>
       Все контакты
-    </Link>
+    </ContactListLink>
   );
 }
 
