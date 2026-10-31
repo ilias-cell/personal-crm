@@ -4,6 +4,8 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 
 import { ContactAvatar } from "@/components/contact-avatar";
+import { RememberContactListHref } from "@/components/contact-list-link";
+import { ContactListPagination } from "@/components/contact-list-pagination";
 import { SearchInput, SearchInputFallback } from "@/components/search-input";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -16,8 +18,9 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { countContacts, listContacts, type ContactListItem } from "@/lib/contacts";
-import { formatContactCount, formatNumber } from "@/lib/format";
+import { formatContactListSummary, formatNumber } from "@/lib/format";
 import { countOverdueContacts } from "@/lib/keep-in-touch";
+import { PAGE_SIZE, parsePage } from "@/lib/pagination";
 
 export default function ContactsPage({ searchParams }: PageProps<"/">) {
   return (
@@ -46,6 +49,11 @@ export default function ContactsPage({ searchParams }: PageProps<"/">) {
         </div>
       </header>
 
+      {/* "Все контакты" on other pages leads back to this page and search. */}
+      <Suspense fallback={null}>
+        <RememberContactListHref />
+      </Suspense>
+
       {/* Stays on screen while scrolling a long list, so search is always one click away. */}
       <div className="sticky top-0 z-10 -mx-6 bg-background/92 px-6 py-2 backdrop-blur-sm">
         <Suspense fallback={<SearchInputFallback />}>
@@ -72,9 +80,13 @@ async function OverdueCount() {
 }
 
 async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
-  const { q } = await searchParams;
+  const { q, page: rawPage } = await searchParams;
   const search = (Array.isArray(q) ? (q[0] ?? "") : (q ?? "")).trim();
-  const [contacts, totalCount] = await Promise.all([listContacts(search), countContacts()]);
+  const [totalCount, foundCount] = await Promise.all([
+    countContacts(),
+    search ? countContacts(search) : null,
+  ]);
+  const listCount = foundCount ?? totalCount;
 
   if (totalCount === 0) {
     return (
@@ -96,7 +108,7 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
     );
   }
 
-  if (contacts.length === 0) {
+  if (listCount === 0) {
     return (
       <Empty className="border border-input py-12">
         <EmptyHeader>
@@ -117,21 +129,30 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
     );
   }
 
+  const pageCount = Math.ceil(listCount / PAGE_SIZE);
+  // A page past the end (contacts were deleted, or the address was typed by hand) shows the last one.
+  const page = Math.min(parsePage(rawPage), pageCount);
+  const contacts = await listContacts(search, page);
+  const first = (page - 1) * PAGE_SIZE + 1;
+
   return (
     <section className="flex flex-col gap-2" aria-label="Список контактов">
-      <p className="text-13 text-subtle" aria-live="polite">
-        {search
-          ? `Найдено: ${formatNumber(contacts.length)} из ${formatNumber(totalCount)}`
-          : `Всего: ${formatContactCount(totalCount)}`}
-      </p>
+      {/* On a phone the switcher goes under the summary; from sm they share one line, the switcher on the right. */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-13 text-subtle" aria-live="polite">
+          {formatContactListSummary({ totalCount, foundCount, first, last: first + contacts.length - 1 })}
+        </p>
+        <ContactListPagination page={page} pageCount={pageCount} search={search} className="sm:mx-0 sm:w-auto" />
+      </div>
       <ul className="divide-y divide-line-soft overflow-hidden rounded-card border bg-card lg:shadow-card">
         {contacts.map((contact) => (
-          // Rows outside the screen are not painted until scrolled to: keeps a thousand rows cheap.
-          <li key={contact.id} className="[contain-intrinsic-size:auto_4rem] [content-visibility:auto]">
+          <li key={contact.id}>
             <ContactRow contact={contact} />
           </li>
         ))}
       </ul>
+      {/* Right-aligned from sm, under the switcher above the list. */}
+      <ContactListPagination page={page} pageCount={pageCount} search={search} className="sm:justify-end" />
     </section>
   );
 }
