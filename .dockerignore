@@ -9,6 +9,7 @@ node_modules
 build
 deploy
 specs
+openspec
 *.md
 *.tsbuildinfo
 .DS_Store
