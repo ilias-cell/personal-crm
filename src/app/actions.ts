@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import type { ZodError } from "zod";
 
 import { db } from "@/db";
+import { describeDbError } from "@/db/errors";
 import { contacts, notes, type TouchFrequency } from "@/db/schema";
 import type {
   ContactFormField,
@@ -85,7 +86,7 @@ export async function createContact(
       touchRestartedAt: parsed.data.touchFrequency ? sql`now()` : null,
     });
   } catch (error) {
-    console.error("Failed to create contact", error);
+    console.error("Failed to create contact", describeDbError(error));
     return { values, fieldErrors: {}, formError: SAVE_FAILED_MESSAGE };
   }
 
@@ -120,7 +121,7 @@ export async function updateContact(
       .where(eq(contacts.id, contactId))
       .returning({ id: contacts.id });
   } catch (error) {
-    console.error("Failed to update contact", error);
+    console.error("Failed to update contact", describeDbError(error));
     return { values, fieldErrors: {}, formError: SAVE_FAILED_MESSAGE };
   }
   if (updatedRows.length === 0) {
@@ -141,7 +142,7 @@ export async function deleteContact(contactId: number): Promise<DeleteContactSta
   try {
     deletedRows = await db.delete(contacts).where(eq(contacts.id, contactId)).returning({ id: contacts.id });
   } catch (error) {
-    console.error("Failed to delete contact", error);
+    console.error("Failed to delete contact", describeDbError(error));
     return { error: DELETE_FAILED_MESSAGE };
   }
   // Nothing deleted: the contact is already gone, for example deleted in another tab.
@@ -179,7 +180,7 @@ export async function addNote(
     }
     await db.insert(notes).values({ contactId, body: parsed.data.body });
   } catch (error) {
-    console.error("Failed to add note", error);
+    console.error("Failed to add note", describeDbError(error));
     return { body, error: SAVE_FAILED_MESSAGE };
   }
 

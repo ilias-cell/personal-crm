@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { connection } from "next/server";
 
 import { db } from "@/db";
+import { describeDbError } from "@/db/errors";
 
 // Smoke-test endpoint for the deploy: 200 only when the app is running and the database answers.
 // "version" is the commit the image was built from, so a deploy can tell the new version from the old one.
@@ -13,7 +14,7 @@ export async function GET() {
   try {
     await db.execute(sql`select 1`);
   } catch (error) {
-    console.error("Health check failed", error);
+    console.error("Health check failed", describeDbError(error));
     return Response.json({ status: "error" }, { status: 503, headers });
   }
 
