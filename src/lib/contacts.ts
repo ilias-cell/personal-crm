@@ -4,6 +4,7 @@ import { and, count, desc, eq, sql } from "drizzle-orm";
 import { cache } from "react";
 
 import { db } from "@/db";
+import { withoutQueryData } from "@/db/errors";
 import { contacts, notes, type Contact, type Note } from "@/db/schema";
 import { PAGE_SIZE } from "@/lib/pagination";
 
@@ -41,27 +42,32 @@ function searchContacts(search: string) {
   };
 }
 
+// The search text is a query parameter: a failed query must not carry it into the server log.
 export async function listContacts(search: string, page: number): Promise<ContactListItem[]> {
   const { where, orderBy } = searchContacts(search);
-  return db
-    .select({
-      id: contacts.id,
-      name: contacts.name,
-      about: contacts.about,
-      howMet: contacts.howMet,
-      phone: contacts.phone,
-      email: contacts.email,
-    })
-    .from(contacts)
-    .where(where)
-    .orderBy(...orderBy)
-    .limit(PAGE_SIZE)
-    .offset((page - 1) * PAGE_SIZE);
+  return withoutQueryData(
+    db
+      .select({
+        id: contacts.id,
+        name: contacts.name,
+        about: contacts.about,
+        howMet: contacts.howMet,
+        phone: contacts.phone,
+        email: contacts.email,
+      })
+      .from(contacts)
+      .where(where)
+      .orderBy(...orderBy)
+      .limit(PAGE_SIZE)
+      .offset((page - 1) * PAGE_SIZE),
+  );
 }
 
 // Without a search, all contacts.
 export async function countContacts(search = ""): Promise<number> {
-  const [row] = await db.select({ value: count() }).from(contacts).where(searchContacts(search).where);
+  const [row] = await withoutQueryData(
+    db.select({ value: count() }).from(contacts).where(searchContacts(search).where),
+  );
   return row.value;
 }
 
