@@ -1,0 +1,36 @@
+schema: spec-driven
+
+context: |
+  Language: Russian
+  All artifacts must be written in Russian.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Change and capability names (folder names) are English kebab-case.
+
+  Project: personal CRM for people the owner knows personally.
+  Product idea, main scenario and constraints: specs/01-продуктовая-идея.md
+  Stack: Next.js (App Router), TypeScript, Tailwind + shadcn/ui, PostgreSQL + Drizzle.
+  The owner is not a developer: write plain words, no implementation jargon in proposals and specs.
+  Product decisions belong to the owner: if the idea document does not answer something, ask; do not invent it.
+  Every scenario must be checkable by hand in the browser; scenarios are the acceptance criteria.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
