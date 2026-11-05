@@ -15,7 +15,7 @@ import type {
   DeleteContactState,
   NoteFormState,
 } from "@/lib/contact-form";
-import { contactSchema, noteSchema } from "@/lib/validation";
+import { contactSchema, isValidId, noteSchema } from "@/lib/validation";
 
 const SAVE_FAILED_MESSAGE =
   "Не удалось сохранить. Проверьте, что база данных запущена, и попробуйте ещё раз.";
@@ -48,11 +48,6 @@ function toFieldErrors(error: ZodError): ContactFormState["fieldErrors"] {
     fieldErrors[field] ??= issue.message;
   }
   return fieldErrors;
-}
-
-// Server actions are reachable by direct requests, so the id is checked even though the UI always sends a valid one.
-function isValidId(id: unknown): id is number {
-  return typeof id === "number" && Number.isInteger(id) && id > 0;
 }
 
 // The keep-in-touch period runs from the last note or from touch_restarted_at, whichever is later.

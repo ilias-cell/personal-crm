@@ -4,6 +4,7 @@ import { LoaderCircleIcon, SearchIcon, XIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 
+import { contactListHref, parseGroupId } from "@/lib/pagination";
 import {
   InputGroup,
   InputGroupAddon,
@@ -18,6 +19,8 @@ export function SearchInput() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") ?? "";
+  // A chosen group stays while the search text changes.
+  const group = parseGroupId(searchParams.get("group") ?? undefined);
 
   const [value, setValue] = useState(urlQuery);
   // The last query this input asked the router to show.
@@ -46,7 +49,7 @@ export function SearchInput() {
     const query = nextValue.trim();
     setRequestedQuery(query);
     startTransition(() => {
-      router.replace(query ? `/?q=${encodeURIComponent(query)}` : "/", { scroll: false });
+      router.replace(contactListHref({ search: query, group, page: 1 }), { scroll: false });
     });
   }
 

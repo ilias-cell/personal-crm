@@ -52,3 +52,10 @@ export async function withoutQueryData<T>(query: PromiseLike<T>): Promise<T> {
     throw new Error("Database query failed", { cause: describeDbError(error) });
   }
 }
+
+// The PostgreSQL error code ("23505" unique violation, "23503" foreign key violation) behind a failed query, if any.
+export function getDbErrorCode(error: unknown): string | undefined {
+  const fields = error as { code?: unknown; cause?: { code?: unknown } } | null;
+  const code = fields?.cause?.code ?? fields?.code;
+  return typeof code === "string" ? code : undefined;
+}

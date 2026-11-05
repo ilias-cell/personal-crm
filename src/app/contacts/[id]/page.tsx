@@ -7,12 +7,14 @@ import { Suspense } from "react";
 import { addNote } from "@/app/actions";
 import { BackToContactList } from "@/components/back-link";
 import { ContactAvatar } from "@/components/contact-avatar";
+import { ContactGroups } from "@/components/contact-groups";
 import { NoteForm } from "@/components/note-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TOUCH_FREQUENCY_LABELS } from "@/lib/contact-form";
 import { getContact, listNotes, parseContactId } from "@/lib/contacts";
 import { formatDate, formatDateTime, formatNoteCount } from "@/lib/format";
+import { listContactGroups, listGroups } from "@/lib/groups";
 
 type Params = PageProps<"/contacts/[id]">["params"];
 
@@ -39,8 +41,15 @@ async function ContactCard({ params }: { params: Params }) {
   const contactId = parseContactId(id);
   if (contactId === null) notFound();
 
-  const [contact, notes] = await Promise.all([getContact(contactId), listNotes(contactId)]);
+  const [contact, notes, memberGroups, allGroups] = await Promise.all([
+    getContact(contactId),
+    listNotes(contactId),
+    listContactGroups(contactId),
+    listGroups(),
+  ]);
   if (!contact) notFound();
+  const memberIds = new Set(memberGroups.map((group) => group.id));
+  const otherGroups = allGroups.filter((group) => !memberIds.has(group.id));
 
   return (
     <>
@@ -60,6 +69,9 @@ async function ContactCard({ params }: { params: Params }) {
       </header>
 
       <dl className="divide-y divide-line-soft rounded-card border bg-card lg:shadow-card">
+        <DetailRow label="Группы">
+          <ContactGroups contactId={contact.id} memberGroups={memberGroups} otherGroups={otherGroups} />
+        </DetailRow>
         <DetailRow label="Откуда знакомы">{contact.howMet}</DetailRow>
         <DetailRow label="Телефон">
           {contact.phone && (

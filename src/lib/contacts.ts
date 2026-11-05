@@ -5,10 +5,14 @@ import { cache } from "react";
 
 import { db } from "@/db";
 import { withoutQueryData } from "@/db/errors";
-import { contacts, notes, type Contact, type Note } from "@/db/schema";
+import { contactGroups, contacts, notes, type Contact, type Note } from "@/db/schema";
+import { listGroupsOfContacts, type GroupSummary } from "@/lib/groups";
 import { PAGE_SIZE } from "@/lib/pagination";
 
-export type ContactListItem = Pick<Contact, "id" | "name" | "about" | "howMet" | "phone" | "email">;
+export type ContactListItem = Pick<Contact, "id" | "name" | "about" | "howMet" | "phone" | "email"> & {
+  // The groups of the person, alphabetically; empty if they are in none.
+  groups: GroupSummary[];
+};
 
 // Search ignores letter case and treats "ё" and "е" as the same letter.
 function normalizeForSearch(value: string): string {
@@ -22,8 +26,9 @@ function escapeLikePattern(value: string): string {
 // Every word of the search must occur in the name, in any order.
 // Names where each word starts a name part ("анна" -> "Анна ...") go before inner matches ("Жанна ...");
 // inside each group, and without a search, the newest contacts come first.
+// With a group, only its people are searched; the order stays the same.
 // The list and its count share this, so both always see the same contacts.
-function searchContacts(search: string) {
+function searchContacts(search: string, groupId: number | null) {
   const terms = normalizeForSearch(search).split(/\s+/).filter(Boolean).map(escapeLikePattern);
   const normalizedName = sql`translate(lower(${contacts.name}), 'ё', 'е')`;
 
@@ -35,17 +40,26 @@ function searchContacts(search: string) {
   const relevance =
     terms.length > 0 ? [desc(sql`(${sql.join(startsWithEveryTerm, sql` and `)})`)] : [];
 
+  const inGroup =
+    groupId === null
+      ? undefined
+      : sql`exists (select 1 from ${contactGroups} where ${contactGroups.contactId} = ${contacts.id} and ${contactGroups.groupId} = ${groupId})`;
+
   return {
-    where: terms.length > 0 ? and(...containsEveryTerm) : undefined,
+    where: and(...containsEveryTerm, inGroup),
     // The id makes the order unique, so pages never share or skip a contact.
     orderBy: [...relevance, desc(contacts.createdAt), desc(contacts.id)],
   };
 }
 
 // The search text is a query parameter: a failed query must not carry it into the server log.
-export async function listContacts(search: string, page: number): Promise<ContactListItem[]> {
-  const { where, orderBy } = searchContacts(search);
-  return withoutQueryData(
+export async function listContacts(
+  search: string,
+  page: number,
+  groupId: number | null = null,
+): Promise<ContactListItem[]> {
+  const { where, orderBy } = searchContacts(search, groupId);
+  const pageOfContacts = await withoutQueryData(
     db
       .select({
         id: contacts.id,
@@ -61,12 +75,15 @@ export async function listContacts(search: string, page: number): Promise<Contac
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE),
   );
+  // The groups of the whole page in one more query, not one per person.
+  const groupsByContact = await listGroupsOfContacts(pageOfContacts.map((contact) => contact.id));
+  return pageOfContacts.map((contact) => ({ ...contact, groups: groupsByContact.get(contact.id) ?? [] }));
 }
 
-// Without a search, all contacts.
-export async function countContacts(search = ""): Promise<number> {
+// Without a search, all contacts; with a group, only its people.
+export async function countContacts(search = "", groupId: number | null = null): Promise<number> {
   const [row] = await withoutQueryData(
-    db.select({ value: count() }).from(contacts).where(searchContacts(search).where),
+    db.select({ value: count() }).from(contacts).where(searchContacts(search, groupId).where),
   );
   return row.value;
 }
