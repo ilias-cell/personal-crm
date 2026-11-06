@@ -1,4 +1,11 @@
-import { ChevronRightIcon, ClockIcon, PlusIcon, SearchXIcon, TagsIcon, UsersIcon } from "lucide-react";
+import {
+  ChevronRightIcon,
+  ClockIcon,
+  PlusIcon,
+  SearchXIcon,
+  TagsIcon,
+  UsersIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -29,7 +36,9 @@ export default function ContactsPage({ searchParams }: PageProps<"/">) {
   return (
     <main className="group/contacts flex flex-col gap-4">
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b-2 border-ink pb-3">
-        <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">Контакты</h1>
+        <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">
+          Контакты
+        </h1>
         <div className="flex flex-wrap items-center gap-x-6">
           <Link
             href="/keep-in-touch"
@@ -131,10 +140,15 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
             <TagsIcon />
           </EmptyMedia>
           <EmptyTitle>В группе «{group.name}» пока никого</EmptyTitle>
-          <EmptyDescription>Откройте контакт и нажмите «+ группа» в строке «Группы».</EmptyDescription>
+          <EmptyDescription>
+            Откройте контакт и нажмите «+ группа» в строке «Группы».
+          </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Link href="/" className={buttonVariants({ variant: "outline", size: "lg", className: "h-10 px-4" })}>
+          <Link
+            href="/"
+            className={buttonVariants({ variant: "outline", size: "lg", className: "h-10 px-4" })}
+          >
             Показать все контакты
           </Link>
         </EmptyContent>
@@ -150,10 +164,15 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
             <UsersIcon />
           </EmptyMedia>
           <EmptyTitle>Пока нет ни одного контакта</EmptyTitle>
-          <EmptyDescription>Добавьте первого человека, чтобы не потерять его из виду.</EmptyDescription>
+          <EmptyDescription>
+            Добавьте первого человека, чтобы не потерять его из виду.
+          </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Link href="/contacts/new" className={buttonVariants({ size: "lg", className: "h-10 px-4" })}>
+          <Link
+            href="/contacts/new"
+            className={buttonVariants({ size: "lg", className: "h-10 px-4" })}
+          >
             <PlusIcon data-icon="inline-start" />
             Добавить контакт
           </Link>

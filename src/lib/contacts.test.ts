@@ -1,9 +1,20 @@
 import { describe, expect, it } from "vitest";
 
 import { countContacts, listContacts } from "@/lib/contacts";
-import { addToGroup, insertContact, insertContacts, insertGroup, insertGroupWithPeople, insertManyContacts } from "@/test/factories";
+import {
+  addToGroup,
+  insertContact,
+  insertContacts,
+  insertGroup,
+  insertGroupWithPeople,
+  insertManyContacts,
+} from "@/test/factories";
 
-async function namesOnPage(search: string, page: number, groupId: number | null = null): Promise<string[]> {
+async function namesOnPage(
+  search: string,
+  page: number,
+  groupId: number | null = null,
+): Promise<string[]> {
   return (await listContacts(search, page, groupId)).map((contact) => contact.name);
 }
 
@@ -89,7 +100,11 @@ describe("contact list of a group", () => {
   });
 
   it("searches among the people of the group only", async () => {
-    const [annaInTennis, annaInFamily, boris] = await insertContacts(["Анна Теннисная", "Анна Семейная", "Борис"]);
+    const [annaInTennis, annaInFamily, boris] = await insertContacts([
+      "Анна Теннисная",
+      "Анна Семейная",
+      "Борис",
+    ]);
     const tennis = await insertGroup("Теннис");
     const family = await insertGroup("Семья");
     await addToGroup(annaInTennis.id, tennis.id);

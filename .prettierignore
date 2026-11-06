@@ -1,0 +1,15 @@
+# Generated files: written by tools, not by hand.
+pnpm-lock.yaml
+drizzle/
+next-env.d.ts
+
+# Documents in Markdown are written by hand and kept as they are.
+*.md
+
+# Local, not in git.
+.claude/
+.vscode/
+specs/
+openspec/
+playwright-report/
+test-results/

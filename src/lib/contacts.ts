@@ -9,7 +9,10 @@ import { contactGroups, contacts, notes, type Contact, type Note } from "@/db/sc
 import { listGroupsOfContacts, type GroupSummary } from "@/lib/groups";
 import { PAGE_SIZE } from "@/lib/pagination";
 
-export type ContactListItem = Pick<Contact, "id" | "name" | "about" | "howMet" | "phone" | "email"> & {
+export type ContactListItem = Pick<
+  Contact,
+  "id" | "name" | "about" | "howMet" | "phone" | "email"
+> & {
   // The groups of the person, alphabetically; empty if they are in none.
   groups: GroupSummary[];
 };
@@ -77,7 +80,10 @@ export async function listContacts(
   );
   // The groups of the whole page in one more query, not one per person.
   const groupsByContact = await listGroupsOfContacts(pageOfContacts.map((contact) => contact.id));
-  return pageOfContacts.map((contact) => ({ ...contact, groups: groupsByContact.get(contact.id) ?? [] }));
+  return pageOfContacts.map((contact) => ({
+    ...contact,
+    groups: groupsByContact.get(contact.id) ?? [],
+  }));
 }
 
 // Without a search, all contacts; with a group, only its people.
@@ -101,7 +107,10 @@ export const getContact = cache(async (id: number): Promise<Contact | null> => {
 });
 
 export async function countNotes(contactId: number): Promise<number> {
-  const [row] = await db.select({ value: count() }).from(notes).where(eq(notes.contactId, contactId));
+  const [row] = await db
+    .select({ value: count() })
+    .from(notes)
+    .where(eq(notes.contactId, contactId));
   return row.value;
 }
 

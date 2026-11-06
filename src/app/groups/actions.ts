@@ -32,7 +32,11 @@ export async function createGroupAction(
   const name = readName(formData);
   const parsed = groupNameSchema.safeParse(name);
   if (!parsed.success) {
-    return { name, error: parsed.error.issues[0]?.message ?? "Проверьте название группы", saved: false };
+    return {
+      name,
+      error: parsed.error.issues[0]?.message ?? "Проверьте название группы",
+      saved: false,
+    };
   }
 
   const result = await createGroup(parsed.data);
@@ -56,7 +60,11 @@ export async function renameGroupAction(
 
   const parsed = groupNameSchema.safeParse(name);
   if (!parsed.success) {
-    return { name, error: parsed.error.issues[0]?.message ?? "Проверьте название группы", saved: false };
+    return {
+      name,
+      error: parsed.error.issues[0]?.message ?? "Проверьте название группы",
+      saved: false,
+    };
   }
 
   const result = await renameGroup(groupId, parsed.data);
@@ -84,7 +92,10 @@ export async function deleteGroupAction(groupId: number): Promise<DeleteGroupSta
 }
 
 // Used by the card: pick a group from the list in "+ группа".
-export async function addContactToGroupAction(contactId: number, groupId: number): Promise<ContactGroupState> {
+export async function addContactToGroupAction(
+  contactId: number,
+  groupId: number,
+): Promise<ContactGroupState> {
   if (!isValidId(contactId)) return { error: CONTACT_NOT_FOUND_MESSAGE };
   if (!isValidId(groupId)) return { error: GROUP_NOT_FOUND_MESSAGE };
 
@@ -109,7 +120,11 @@ export async function addContactToGroupByNameAction(
 
   const parsed = groupNameSchema.safeParse(name);
   if (!parsed.success) {
-    return { name, error: parsed.error.issues[0]?.message ?? "Проверьте название группы", saved: false };
+    return {
+      name,
+      error: parsed.error.issues[0]?.message ?? "Проверьте название группы",
+      saved: false,
+    };
   }
 
   const result = await addContactToGroupByName(contactId, parsed.data);
@@ -122,7 +137,10 @@ export async function addContactToGroupByNameAction(
 }
 
 // The cross on a label in the card: no question, and the group stays even if nobody is left in it.
-export async function removeContactFromGroupAction(contactId: number, groupId: number): Promise<ContactGroupState> {
+export async function removeContactFromGroupAction(
+  contactId: number,
+  groupId: number,
+): Promise<ContactGroupState> {
   if (!isValidId(contactId)) return { error: CONTACT_NOT_FOUND_MESSAGE };
   if (!isValidId(groupId)) return { error: GROUP_NOT_FOUND_MESSAGE };
 

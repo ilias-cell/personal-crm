@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { index, integer, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 // How often the owner wants to keep in touch with a contact.
 export const touchFrequency = pgEnum("touch_frequency", ["week", "month", "quarter", "year"]);

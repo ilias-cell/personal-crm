@@ -33,7 +33,10 @@ const alphabetical = [asc(sql`lower(${groups.name})`), asc(groups.id)];
 
 export async function listGroups(): Promise<GroupSummary[]> {
   return withoutQueryData(
-    db.select({ id: groups.id, name: groups.name }).from(groups).orderBy(...alphabetical),
+    db
+      .select({ id: groups.id, name: groups.name })
+      .from(groups)
+      .orderBy(...alphabetical),
   );
 }
 
@@ -69,7 +72,9 @@ export async function listContactGroups(contactId: number): Promise<GroupSummary
 }
 
 // The groups of every person on a page, in one query. People without groups are not in the map.
-export async function listGroupsOfContacts(contactIds: number[]): Promise<Map<number, GroupSummary[]>> {
+export async function listGroupsOfContacts(
+  contactIds: number[],
+): Promise<Map<number, GroupSummary[]>> {
   const byContact = new Map<number, GroupSummary[]>();
   if (contactIds.length === 0) return byContact;
 
@@ -121,7 +126,11 @@ export async function createGroup(name: string): Promise<GroupSavedResult> {
 // Renaming to the same name in other letter case is the same row for the unique index, so it is allowed.
 export async function renameGroup(id: number, name: string): Promise<GroupResult> {
   try {
-    const [renamed] = await db.update(groups).set({ name }).where(eq(groups.id, id)).returning({ id: groups.id });
+    const [renamed] = await db
+      .update(groups)
+      .set({ name })
+      .where(eq(groups.id, id))
+      .returning({ id: groups.id });
     return renamed ? { ok: true } : { ok: false, error: GROUP_NOT_FOUND_MESSAGE };
   } catch (error) {
     if (getDbErrorCode(error) === UNIQUE_VIOLATION) {
@@ -140,13 +149,20 @@ export async function deleteGroup(id: number): Promise<GroupResult> {
     return deleted ? { ok: true } : { ok: false, error: GROUP_NOT_FOUND_MESSAGE };
   } catch (error) {
     console.error("Failed to delete group", describeDbError(error));
-    return { ok: false, error: "Не удалось удалить. Проверьте, что база данных запущена, и попробуйте ещё раз." };
+    return {
+      ok: false,
+      error: "Не удалось удалить. Проверьте, что база данных запущена, и попробуйте ещё раз.",
+    };
   }
 }
 
 // A foreign key failed while adding a membership: the contact or the group was deleted in another tab.
 async function missingParentMessage(contactId: number): Promise<string> {
-  const [contact] = await db.select({ id: contacts.id }).from(contacts).where(eq(contacts.id, contactId)).limit(1);
+  const [contact] = await db
+    .select({ id: contacts.id })
+    .from(contacts)
+    .where(eq(contacts.id, contactId))
+    .limit(1);
   return contact ? GROUP_NOT_FOUND_MESSAGE : CONTACT_NOT_FOUND_MESSAGE;
 }
 
@@ -166,7 +182,10 @@ export async function addContactToGroup(contactId: number, groupId: number): Pro
 
 // The name must already be checked (see groupNameSchema). One transaction: create the group if there is none
 // of that name, find it, put the person in. If the contact is gone, the group is not created either.
-export async function addContactToGroupByName(contactId: number, name: string): Promise<GroupSavedResult> {
+export async function addContactToGroupByName(
+  contactId: number,
+  name: string,
+): Promise<GroupSavedResult> {
   try {
     return await db.transaction(async (tx) => {
       await tx.insert(groups).values({ name }).onConflictDoNothing();
@@ -190,7 +209,10 @@ export async function addContactToGroupByName(contactId: number, name: string): 
 }
 
 // Removing someone who is not in the group is not an error. The group stays, even if nobody is left in it.
-export async function removeContactFromGroup(contactId: number, groupId: number): Promise<GroupResult> {
+export async function removeContactFromGroup(
+  contactId: number,
+  groupId: number,
+): Promise<GroupResult> {
   try {
     await db
       .delete(contactGroups)

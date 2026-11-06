@@ -8,10 +8,14 @@ beforeEach(async () => {
   const { db } = await import("@/db");
   const { sql } = await import("drizzle-orm");
 
-  const { rows: current } = await db.execute<{ name: string }>(sql`select current_database() as name`);
+  const { rows: current } = await db.execute<{ name: string }>(
+    sql`select current_database() as name`,
+  );
   const name = current[0]?.name ?? "";
   if (!name.endsWith("_test")) {
-    throw new Error(`Refusing to clear database "${name}": the name of a test database must end with _test.`);
+    throw new Error(
+      `Refusing to clear database "${name}": the name of a test database must end with _test.`,
+    );
   }
 
   const { rows: tables } = await db.execute<{ tablename: string }>(

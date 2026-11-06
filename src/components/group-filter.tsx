@@ -10,17 +10,23 @@ const chipClassName =
 
 // The row of labels under the search: "Все" and the groups. One is chosen at a time; choosing keeps the search
 // and opens the first page. No groups, no row. On a phone it stays one line and scrolls sideways.
-export async function GroupFilter({ search, selectedGroupId }: { search: string; selectedGroupId: number | null }) {
+export async function GroupFilter({
+  search,
+  selectedGroupId,
+}: {
+  search: string;
+  selectedGroupId: number | null;
+}) {
   const groups = await listGroups();
   if (groups.length === 0) return null;
 
-  const items = [
-    { id: null, name: "Все" },
-    ...groups,
-  ];
+  const items = [{ id: null, name: "Все" }, ...groups];
 
   return (
-    <nav aria-label="Группы" className="-mx-6 overflow-x-auto px-6 sm:mx-0 sm:overflow-visible sm:px-0">
+    <nav
+      aria-label="Группы"
+      className="-mx-6 overflow-x-auto px-6 sm:mx-0 sm:overflow-visible sm:px-0"
+    >
       <ul className="flex w-max items-center gap-2 sm:w-auto sm:flex-wrap">
         {items.map((item) => {
           const isSelected = item.id === selectedGroupId;

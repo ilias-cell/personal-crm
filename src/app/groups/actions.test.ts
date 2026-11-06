@@ -52,7 +52,11 @@ describe("createGroupAction", () => {
 
     const state = await createGroupAction(initialGroupFormState, form(tooLong));
 
-    expect(state).toEqual({ name: tooLong, error: "Название — не длиннее 40 символов", saved: false });
+    expect(state).toEqual({
+      name: tooLong,
+      error: "Название — не длиннее 40 символов",
+      saved: false,
+    });
     expect(await groupNames()).toEqual([]);
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -72,7 +76,11 @@ describe("renameGroupAction", () => {
   it("renames the group and refreshes the pages", async () => {
     const tennis = await insertGroup("Теннис");
 
-    const state = await renameGroupAction(tennis.id, initialGroupFormState, form("Теннис по средам"));
+    const state = await renameGroupAction(
+      tennis.id,
+      initialGroupFormState,
+      form("Теннис по средам"),
+    );
 
     expect(state).toEqual({ name: "Теннис по средам", error: null, saved: true });
     expect(await groupNames()).toEqual(["Теннис по средам"]);
@@ -95,7 +103,11 @@ describe("renameGroupAction", () => {
 
     const state = await renameGroupAction(tennis.id, initialGroupFormState, form(tooLong));
 
-    expect(state).toEqual({ name: tooLong, error: "Название — не длиннее 40 символов", saved: false });
+    expect(state).toEqual({
+      name: tooLong,
+      error: "Название — не длиннее 40 символов",
+      saved: false,
+    });
   });
 
   it("says the group is gone for a number that is not a group", async () => {
@@ -120,7 +132,9 @@ describe("deleteGroupAction", () => {
     const tennis = await insertGroup("Теннис");
     await deleteGroupAction(tennis.id);
 
-    expect(await deleteGroupAction(tennis.id)).toEqual({ error: "Этой группы уже нет. Обновите страницу." });
+    expect(await deleteGroupAction(tennis.id)).toEqual({
+      error: "Этой группы уже нет. Обновите страницу.",
+    });
   });
 });
 
@@ -138,7 +152,9 @@ describe("addContactToGroupAction", () => {
   it("says the group is gone when it was deleted in another tab", async () => {
     const anna = await insertContact("Анна");
 
-    expect(await addContactToGroupAction(anna.id, 999)).toEqual({ error: "Этой группы уже нет. Обновите страницу." });
+    expect(await addContactToGroupAction(anna.id, 999)).toEqual({
+      error: "Этой группы уже нет. Обновите страницу.",
+    });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -156,7 +172,11 @@ describe("addContactToGroupByNameAction", () => {
   it("creates the group, puts the person in it and reports success", async () => {
     const anna = await insertContact("Анна");
 
-    const state = await addContactToGroupByNameAction(anna.id, initialGroupFormState, form("  Йога "));
+    const state = await addContactToGroupByNameAction(
+      anna.id,
+      initialGroupFormState,
+      form("  Йога "),
+    );
 
     expect(state).toEqual({ name: "", error: null, saved: true });
     expect((await listContactGroups(anna.id)).map((group) => group.name)).toEqual(["Йога"]);
@@ -167,7 +187,11 @@ describe("addContactToGroupByNameAction", () => {
     const anna = await insertContact("Анна");
     await insertGroup("Семья");
 
-    const state = await addContactToGroupByNameAction(anna.id, initialGroupFormState, form("семья"));
+    const state = await addContactToGroupByNameAction(
+      anna.id,
+      initialGroupFormState,
+      form("семья"),
+    );
 
     expect(state.saved).toBe(true);
     expect((await listContactGroups(anna.id)).map((group) => group.name)).toEqual(["Семья"]);
@@ -179,7 +203,11 @@ describe("addContactToGroupByNameAction", () => {
     const tennis = await insertGroup("Теннис");
     await addToGroup(anna.id, tennis.id);
 
-    const state = await addContactToGroupByNameAction(anna.id, initialGroupFormState, form("теннис"));
+    const state = await addContactToGroupByNameAction(
+      anna.id,
+      initialGroupFormState,
+      form("теннис"),
+    );
 
     expect(state.saved).toBe(true);
     expect((await listContactGroups(anna.id)).map((group) => group.name)).toEqual(["Теннис"]);
@@ -198,7 +226,11 @@ describe("addContactToGroupByNameAction", () => {
   it("does not report success for a name that is too long", async () => {
     const anna = await insertContact("Анна");
 
-    const state = await addContactToGroupByNameAction(anna.id, initialGroupFormState, form("а".repeat(41)));
+    const state = await addContactToGroupByNameAction(
+      anna.id,
+      initialGroupFormState,
+      form("а".repeat(41)),
+    );
 
     expect(state.saved).toBe(false);
     expect(state.error).toBe("Название — не длиннее 40 символов");

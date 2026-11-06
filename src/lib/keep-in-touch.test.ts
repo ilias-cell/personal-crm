@@ -23,7 +23,12 @@ describe("people to get in touch with", () => {
 
     const [person] = await listOverdueContacts();
 
-    expect(person).toMatchObject({ id: boris.id, name: "Борис", touchFrequency: "week", overdueDays: 16 });
+    expect(person).toMatchObject({
+      id: boris.id,
+      name: "Борис",
+      touchFrequency: "week",
+      overdueDays: 16,
+    });
     expect(person.lastNoteAt?.getTime()).toBeCloseTo(daysAgo(23).getTime(), -4);
   });
 
@@ -43,7 +48,10 @@ describe("people to get in touch with", () => {
   });
 
   it("gives the groups of the person alphabetically", async () => {
-    const boris = await insertContact("Борис", { touchFrequency: "week", touchRestartedAt: daysAgo(10) });
+    const boris = await insertContact("Борис", {
+      touchFrequency: "week",
+      touchRestartedAt: daysAgo(10),
+    });
     for (const name of ["Теннис", "Аналитики"]) {
       await addToGroup(boris.id, (await insertGroup(name)).id);
     }
@@ -63,7 +71,10 @@ describe("people to get in touch with", () => {
   });
 
   it("gives the same people with the same groups on every read, as in another browser", async () => {
-    const boris = await insertContact("Борис", { touchFrequency: "week", touchRestartedAt: daysAgo(10) });
+    const boris = await insertContact("Борис", {
+      touchFrequency: "week",
+      touchRestartedAt: daysAgo(10),
+    });
     await addToGroup(boris.id, (await insertGroup("Теннис")).id);
 
     expect(await listOverdueContacts()).toEqual(await listOverdueContacts());

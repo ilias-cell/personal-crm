@@ -43,7 +43,10 @@ export function quoteIdentifier(name: string): string {
 async function createDatabaseIfMissing(name: string) {
   const serverUrl = loadDatabaseUrl();
   serverUrl.pathname = "/postgres";
-  const client = new Client({ connectionString: serverUrl.toString(), connectionTimeoutMillis: 5000 });
+  const client = new Client({
+    connectionString: serverUrl.toString(),
+    connectionTimeoutMillis: 5000,
+  });
   try {
     await client.connect();
   } catch (error) {

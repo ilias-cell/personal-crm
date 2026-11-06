@@ -56,12 +56,20 @@ async function ContactCard({ params }: { params: Params }) {
       <header className="flex flex-wrap items-start gap-4">
         <ContactAvatar name={contact.name} size="lg" />
         <div className="min-w-0 flex-1 basis-48">
-          <h1 className="font-serif text-2xl font-normal tracking-[-0.015em] break-words lg:text-3xl">{contact.name}</h1>
-          {contact.about && <p className="mt-1 break-words text-muted-foreground">{contact.about}</p>}
+          <h1 className="font-serif text-2xl font-normal tracking-[-0.015em] break-words lg:text-3xl">
+            {contact.name}
+          </h1>
+          {contact.about && (
+            <p className="mt-1 break-words text-muted-foreground">{contact.about}</p>
+          )}
         </div>
         <Link
           href={`/contacts/${contact.id}/edit`}
-          className={buttonVariants({ variant: "outline", size: "lg", className: "h-10 shrink-0 px-4" })}
+          className={buttonVariants({
+            variant: "outline",
+            size: "lg",
+            className: "h-10 shrink-0 px-4",
+          })}
         >
           <PencilIcon data-icon="inline-start" />
           Редактировать
@@ -70,12 +78,19 @@ async function ContactCard({ params }: { params: Params }) {
 
       <dl className="divide-y divide-line-soft rounded-card border bg-card lg:shadow-card">
         <DetailRow label="Группы">
-          <ContactGroups contactId={contact.id} memberGroups={memberGroups} otherGroups={otherGroups} />
+          <ContactGroups
+            contactId={contact.id}
+            memberGroups={memberGroups}
+            otherGroups={otherGroups}
+          />
         </DetailRow>
         <DetailRow label="Откуда знакомы">{contact.howMet}</DetailRow>
         <DetailRow label="Телефон">
           {contact.phone && (
-            <a href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`} className="text-accent hover:opacity-80">
+            <a
+              href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}
+              className="text-accent hover:opacity-80"
+            >
               {contact.phone}
             </a>
           )}
@@ -100,7 +115,9 @@ async function ContactCard({ params }: { params: Params }) {
           <h2 id="notes-heading" className="font-serif text-22 font-normal tracking-[-0.015em]">
             Заметки
           </h2>
-          {notes.length > 0 && <span className="text-13 text-subtle">{formatNoteCount(notes.length)}</span>}
+          {notes.length > 0 && (
+            <span className="text-13 text-subtle">{formatNoteCount(notes.length)}</span>
+          )}
         </div>
 
         <NoteForm action={addNote.bind(null, contact.id)} />

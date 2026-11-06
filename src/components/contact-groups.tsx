@@ -70,7 +70,13 @@ export function ContactGroups({
   );
 }
 
-function AddToGroup({ contactId, otherGroups }: { contactId: number; otherGroups: GroupSummary[] }) {
+function AddToGroup({
+  contactId,
+  otherGroups,
+}: {
+  contactId: number;
+  otherGroups: GroupSummary[];
+}) {
   const [open, setOpen] = useState(false);
 
   // Escape, a click outside and the trigger are handled by the popover; the popup closes itself after a success.
@@ -80,8 +86,16 @@ function AddToGroup({ contactId, otherGroups }: { contactId: number; otherGroups
         <PlusIcon className="size-3.5" aria-hidden="true" />
         группа
       </PopoverTrigger>
-      <PopoverContent align="start" aria-label="Добавить в группу" className="w-72 max-w-[calc(100vw-3rem)]">
-        <AddToGroupContent contactId={contactId} otherGroups={otherGroups} onDone={() => setOpen(false)} />
+      <PopoverContent
+        align="start"
+        aria-label="Добавить в группу"
+        className="w-72 max-w-[calc(100vw-3rem)]"
+      >
+        <AddToGroupContent
+          contactId={contactId}
+          otherGroups={otherGroups}
+          onDone={() => setOpen(false)}
+        />
       </PopoverContent>
     </Popover>
   );
@@ -161,7 +175,9 @@ function AddToGroupContent({
               {isCreating ? "Создаю…" : "Создать"}
             </Button>
           </div>
-          {state.error && <FieldError id={`card-new-group-${contactId}-error`}>{state.error}</FieldError>}
+          {state.error && (
+            <FieldError id={`card-new-group-${contactId}-error`}>{state.error}</FieldError>
+          )}
         </Field>
       </form>
     </div>

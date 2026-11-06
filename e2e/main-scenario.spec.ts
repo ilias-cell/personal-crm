@@ -19,7 +19,10 @@ function notesSection(page: Page) {
   return page.getByRole("region", { name: "Заметки" });
 }
 
-test("add a contact, find it, write a note, see it in another browser", async ({ page, browser }) => {
+test("add a contact, find it, write a note, see it in another browser", async ({
+  page,
+  browser,
+}) => {
   const newName = "Вера Климова";
   const note = "Договорились созвониться в пятницу насчёт поездки в Казань";
 
@@ -45,7 +48,9 @@ test("add a contact, find it, write a note, see it in another browser", async ({
   await expect(contactList(page).getByRole("link")).toHaveCount(1);
 
   // Open the card and write a note.
-  await contactList(page).getByRole("link", { name: new RegExp(newName) }).click();
+  await contactList(page)
+    .getByRole("link", { name: new RegExp(newName) })
+    .click();
   await expect(page.getByRole("heading", { level: 1, name: newName })).toBeVisible();
   await expect(notesSection(page).getByText("Заметок пока нет")).toBeVisible();
 

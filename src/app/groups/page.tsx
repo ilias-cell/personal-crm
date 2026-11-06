@@ -25,7 +25,9 @@ export default function GroupsPage() {
     <main className="flex flex-col gap-4">
       <BackToContactList />
       <header className="border-b-2 border-ink pb-3">
-        <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">Группы</h1>
+        <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">
+          Группы
+        </h1>
       </header>
       <CreateGroupForm />
       <Suspense fallback={<GroupListSkeleton />}>
@@ -49,8 +51,8 @@ async function GroupList() {
           </EmptyMedia>
           <EmptyTitle>Пока нет ни одной группы</EmptyTitle>
           <EmptyDescription>
-            Группы помогают раскладывать людей: семья, друзья, теннис. Создайте первую здесь или в карточке контакта
-            кнопкой «+ группа».
+            Группы помогают раскладывать людей: семья, друзья, теннис. Создайте первую здесь или в
+            карточке контакта кнопкой «+ группа».
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -72,7 +74,10 @@ async function GroupList() {
 
 function GroupListSkeleton() {
   return (
-    <div className="divide-y divide-line-soft overflow-hidden rounded-card border bg-card" aria-hidden="true">
+    <div
+      className="divide-y divide-line-soft overflow-hidden rounded-card border bg-card"
+      aria-hidden="true"
+    >
       {Array.from({ length: 3 }, (_, index) => (
         <div key={index} className="flex h-14 items-center px-4">
           <Skeleton className="h-4 w-52" />

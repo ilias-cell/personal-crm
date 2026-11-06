@@ -9,7 +9,9 @@ async function withDatabase<T>(work: (client: Client) => Promise<T>): Promise<T>
   const url = testDatabaseUrl("_e2e");
   // Refuses anything but the e2e database, so a wrong DATABASE_URL can never clear working data.
   if (!databaseName(url).endsWith("_e2e")) {
-    throw new Error(`Refusing to use database "${databaseName(url)}": the name of the e2e database must end with _e2e.`);
+    throw new Error(
+      `Refusing to use database "${databaseName(url)}": the name of the e2e database must end with _e2e.`,
+    );
   }
   const client = new Client({ connectionString: url.toString(), connectionTimeoutMillis: 5000 });
   await client.connect();

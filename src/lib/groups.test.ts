@@ -29,8 +29,16 @@ describe("groups list", () => {
     await createGroup("аналитики");
     await createGroup("Семья");
 
-    expect((await listGroups()).map((group) => group.name)).toEqual(["аналитики", "Семья", "Теннис"]);
-    expect((await listGroupsWithCounts()).map((group) => group.name)).toEqual(["аналитики", "Семья", "Теннис"]);
+    expect((await listGroups()).map((group) => group.name)).toEqual([
+      "аналитики",
+      "Семья",
+      "Теннис",
+    ]);
+    expect((await listGroupsWithCounts()).map((group) => group.name)).toEqual([
+      "аналитики",
+      "Семья",
+      "Теннис",
+    ]);
   });
 
   it("puts «ё» in its place among the letters", async () => {
@@ -46,7 +54,10 @@ describe("groups list", () => {
     await insertGroupWithPeople("Семья", 1);
     await insertGroupWithPeople("Теннис", 12);
 
-    const shown = (await listGroupsWithCounts()).map(({ name, contactCount }) => [name, contactCount]);
+    const shown = (await listGroupsWithCounts()).map(({ name, contactCount }) => [
+      name,
+      contactCount,
+    ]);
     expect(shown).toEqual([
       ["Аналитики", 0],
       ["Семья", 1],
@@ -106,7 +117,9 @@ describe("renameGroup", () => {
     const result = await renameGroup(group.id, "Теннис по средам");
 
     expect(result).toEqual({ ok: true });
-    expect(await listGroupsWithCounts()).toMatchObject([{ name: "Теннис по средам", contactCount: 12 }]);
+    expect(await listGroupsWithCounts()).toMatchObject([
+      { name: "Теннис по средам", contactCount: 12 },
+    ]);
   });
 
   it("refuses a name that another group already has, whatever the letter case", async () => {
@@ -157,8 +170,12 @@ describe("deleteGroup", () => {
     expect(result).toEqual({ ok: true });
     expect((await listGroups()).map((group) => group.name)).toEqual(["Семья"]);
     expect(await db.select().from(contacts)).toHaveLength(1);
-    expect(await db.select({ body: notes.body }).from(notes)).toEqual([{ body: "Встретились на корте" }]);
-    expect(await db.select().from(contactGroups)).toEqual([{ contactId: anna.id, groupId: family.id }]);
+    expect(await db.select({ body: notes.body }).from(notes)).toEqual([
+      { body: "Встретились на корте" },
+    ]);
+    expect(await db.select().from(contactGroups)).toEqual([
+      { contactId: anna.id, groupId: family.id },
+    ]);
   });
 
   it("says the group is gone when it was already deleted in another tab", async () => {

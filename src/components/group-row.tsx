@@ -46,14 +46,29 @@ export function GroupRow({ group }: { group: GroupWithCount }) {
         >
           {group.name}
         </Link>
-        <span className="text-13 whitespace-nowrap text-subtle"> — {formatGroupSize(group.contactCount)}</span>
+        <span className="text-13 whitespace-nowrap text-subtle">
+          {" "}
+          — {formatGroupSize(group.contactCount)}
+        </span>
       </div>
       <div className="flex items-center gap-1">
-        <Button ref={renameButtonRef} type="button" variant="ghost" size="lg" onClick={() => setMode("renaming")}>
+        <Button
+          ref={renameButtonRef}
+          type="button"
+          variant="ghost"
+          size="lg"
+          onClick={() => setMode("renaming")}
+        >
           <PencilIcon data-icon="inline-start" />
           Переименовать
         </Button>
-        <Button ref={deleteButtonRef} type="button" variant="ghost" size="lg" onClick={() => setMode("deleting")}>
+        <Button
+          ref={deleteButtonRef}
+          type="button"
+          variant="ghost"
+          size="lg"
+          onClick={() => setMode("deleting")}
+        >
           <Trash2Icon data-icon="inline-start" />
           Удалить
         </Button>
@@ -96,13 +111,22 @@ function RenameGroup({ group, onClose }: { group: GroupWithCount; onClose: () =>
           aria-describedby={state.error ? `rename-group-${group.id}-error` : undefined}
           className="h-10 text-base"
         />
-        {state.error && <FieldError id={`rename-group-${group.id}-error`}>{state.error}</FieldError>}
+        {state.error && (
+          <FieldError id={`rename-group-${group.id}-error`}>{state.error}</FieldError>
+        )}
       </Field>
       <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" size="lg" className="h-10 px-4" disabled={isPending}>
           {isPending ? "Сохраняю…" : "Сохранить"}
         </Button>
-        <Button type="button" variant="ghost" size="lg" className="h-10 px-4" disabled={isPending} onClick={onClose}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="lg"
+          className="h-10 px-4"
+          disabled={isPending}
+          onClick={onClose}
+        >
           Отмена
         </Button>
       </div>
@@ -135,13 +159,22 @@ function DeleteGroup({ group, onClose }: { group: GroupWithCount; onClose: () =>
       </p>
 
       {state.error && (
-        <p role="alert" className="rounded-control bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p
+          role="alert"
+          className="rounded-control bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
           {state.error}
         </p>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="submit" variant="destructive" size="lg" className="h-10 px-4" disabled={isPending}>
+        <Button
+          type="submit"
+          variant="destructive"
+          size="lg"
+          className="h-10 px-4"
+          disabled={isPending}
+        >
           {isPending ? "Удаляю…" : "Да, удалить"}
         </Button>
         <Button

@@ -135,7 +135,10 @@ export async function deleteContact(contactId: number): Promise<DeleteContactSta
 
   let deletedRows: { id: number }[];
   try {
-    deletedRows = await db.delete(contacts).where(eq(contacts.id, contactId)).returning({ id: contacts.id });
+    deletedRows = await db
+      .delete(contacts)
+      .where(eq(contacts.id, contactId))
+      .returning({ id: contacts.id });
   } catch (error) {
     console.error("Failed to delete contact", describeDbError(error));
     return { error: DELETE_FAILED_MESSAGE };
