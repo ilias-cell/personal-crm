@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { BackToContactList } from "@/components/back-link";
 import { ContactAvatar } from "@/components/contact-avatar";
 import { ContactListLink } from "@/components/contact-list-link";
+import { GroupBadge } from "@/components/group-badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Empty,
@@ -94,8 +95,15 @@ function OverdueRow({ person }: { person: OverdueContact }) {
         >
           {formatOverdue(person.overdueDays)}
         </span>
-        <span className="text-13 text-subtle sm:col-start-1">
-          {TOUCH_FREQUENCY_LABELS[person.touchFrequency]} · {lastNote}
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-13 text-subtle sm:col-start-1">
+          <span>
+            {TOUCH_FREQUENCY_LABELS[person.touchFrequency]} · {lastNote}
+          </span>
+          {person.groups.map((group) => (
+            <GroupBadge key={group.id} className="h-5 px-1.5 text-xs">
+              {group.name}
+            </GroupBadge>
+          ))}
         </span>
       </span>
       <ChevronRightIcon

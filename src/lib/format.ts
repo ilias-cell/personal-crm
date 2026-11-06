@@ -37,29 +37,39 @@ export function formatContactCount(count: number): string {
   return `${numberFormat.format(count)} ${noun}`;
 }
 
+// The size of a group: "пока никого", "1 контакт", "12 контактов".
+export function formatGroupSize(count: number): string {
+  return count === 0 ? "пока никого" : formatContactCount(count);
+}
+
 type ContactListSummary = {
+  // All contacts, or all people of the chosen group.
   totalCount: number;
   // How many contacts the search found; null without a search.
   foundCount: number | null;
   // Positions of the first and the last contact on the screen, counted from 1.
   first: number;
   last: number;
+  // A group is chosen: the numbers above are counted inside it.
+  inGroup?: boolean;
 };
 
 // "Всего: 12 контактов", "Найдено: 7 из 998". When the list does not fit on one page,
 // also which contacts are on the screen: "Показаны 51–100 из 998", "Найдено: 120 из 998 · показаны 51–100".
+// In a group, everything is counted inside it, and a group on one page reads "В группе: 12 контактов".
 export function formatContactListSummary({
   totalCount,
   foundCount,
   first,
   last,
+  inGroup = false,
 }: ContactListSummary): string {
   const onePage = first === 1 && last === (foundCount ?? totalCount);
   const shown = `${numberFormat.format(first)}–${numberFormat.format(last)}`;
 
   if (foundCount === null) {
     return onePage
-      ? `Всего: ${formatContactCount(totalCount)}`
+      ? `${inGroup ? "В группе" : "Всего"}: ${formatContactCount(totalCount)}`
       : `Показаны ${shown} из ${numberFormat.format(totalCount)}`;
   }
   const found = `Найдено: ${numberFormat.format(foundCount)} из ${numberFormat.format(totalCount)}`;

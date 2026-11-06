@@ -10,6 +10,14 @@ export function parsePage(raw: string | string[] | undefined): number {
   return Number(value);
 }
 
+// The group in the address is its number (/?group=12), which survives a rename.
+// Like a contact id: anything that is not a positive whole number means "no group".
+export function parseGroupId(raw: string | string[] | undefined): number | null {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (value === undefined || !/^[1-9]\d{0,8}$/.test(value)) return null;
+  return Number(value);
+}
+
 export type PageItem = number | "start-ellipsis" | "end-ellipsis";
 
 // The first and last pages, the current one and one neighbour on each side; gaps collapse to an ellipsis,
@@ -33,8 +41,18 @@ function range(from: number, to: number): number[] {
 }
 
 // The first page has no number in the address, so "/" and "/?q=..." keep meaning what they always did.
-export function contactListHref({ search, page }: { search: string; page: number }): string {
+// Order of parameters: group, search, page.
+export function contactListHref({
+  search,
+  group = null,
+  page,
+}: {
+  search: string;
+  group?: number | null;
+  page: number;
+}): string {
   const params = new URLSearchParams();
+  if (group !== null) params.set("group", String(group));
   if (search) params.set("q", search);
   if (page > 1) params.set("page", String(page));
   const query = params.toString();

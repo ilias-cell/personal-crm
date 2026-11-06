@@ -5,12 +5,15 @@ import { asc, count, desc, gte, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { contacts, notes, type Contact, type TouchFrequency } from "@/db/schema";
 import { OWNER_TIME_ZONE } from "@/lib/format";
+import { listGroupsOfContacts, type GroupSummary } from "@/lib/groups";
 
 export type OverdueContact = Pick<Contact, "id" | "name"> & {
   touchFrequency: TouchFrequency;
   lastNoteAt: Date | null;
   // 0: the period ends today.
   overdueDays: number;
+  // The groups of the person, alphabetically; empty if they are in none.
+  groups: GroupSummary[];
 };
 
 // Days are counted on the owner's calendar. The app server runs in UTC, so "today" and the day of a note
@@ -51,11 +54,14 @@ const trackedContacts = db
 
 // The person's period ended today or earlier. The longest overdue go first, equal ones by name.
 export async function listOverdueContacts(): Promise<OverdueContact[]> {
-  return db
+  const people = await db
     .select()
     .from(trackedContacts)
     .where(gte(trackedContacts.overdueDays, 0))
     .orderBy(desc(trackedContacts.overdueDays), asc(trackedContacts.name), asc(trackedContacts.id));
+
+  const groupsByContact = await listGroupsOfContacts(people.map((person) => person.id));
+  return people.map((person) => ({ ...person, groups: groupsByContact.get(person.id) ?? [] }));
 }
 
 export async function countOverdueContacts(): Promise<number> {

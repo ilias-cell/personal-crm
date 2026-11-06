@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Группы контактов — обзор</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;1,7..72,400&display=swap">
+<style>
+/* Values copied from src/app/globals.css (the app's design tokens), same names */
+:root {
+  --background: #f3eee5;
+  --foreground: #231e18;
+  --card: #fbf8f2;
+  --card-foreground: #231e18;
+  --primary: #231e18;
+  --primary-foreground: #f3eee5;
+  --secondary: #f8f4ec;
+  --muted: #e3dbcd;
+  --muted-foreground: #5e554a;
+  --accent: oklch(0.48 0.13 255);
+  --accent-foreground: #ffffff;
+  --destructive: oklch(0.5 0.17 27);
+  --border: #ddd4c5;
+  --input: #d3c9b8;
+  --field: #f8f4ec;
+  --input-surface: #ffffff;
+  --line-soft: #e3dbcd;
+  --subtle: #7c7264;
+  --placeholder: #958a7a;
+  --font-sans: "Commissioner", system-ui, sans-serif;
+  --font-serif: "Literata", Georgia, serif;
+  --radius-control: 4px;
+  --radius-card: 6px;
+  --shadow-card: 0 30px 60px -40px rgba(40, 30, 15, 0.35);
+  /* Derived from the tokens above: a pale wash of the accent for "new" highlights */
+  --accent-soft: color-mix(in oklch, var(--accent) 10%, var(--card));
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans); font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+.page { max-width: 880px; margin: 0 auto; padding: 40px 16px 80px; }
+header.top { font-family: var(--font-serif); font-style: italic; font-size: 18px; color: var(--muted-foreground); }
+h1 { font-family: var(--font-serif); font-weight: 400; font-size: 44px; line-height: 1.08; letter-spacing: -0.03em; margin: 12px 0 12px; text-wrap: balance; }
+h2 { font-family: var(--font-serif); font-weight: 400; font-size: 30px; letter-spacing: -0.02em; margin: 56px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--foreground); display: flex; align-items: baseline; gap: 12px; }
+h2 .num { font-size: 16px; color: var(--accent); font-style: italic; }
+h3 { font-family: var(--font-serif); font-weight: 500; font-size: 20px; margin: 28px 0 10px; }
+p { margin: 8px 0; text-wrap: pretty; }
+.lead { font-size: 18px; color: var(--muted-foreground); max-width: 680px; }
+.muted { color: var(--subtle); }
+.small { font-size: 14px; }
+code { font-family: ui-monospace, Menlo, monospace; font-size: 0.86em; background: var(--muted); padding: 1px 5px; border-radius: var(--radius-control); }
+ul.points { padding-left: 20px; margin: 8px 0; }
+ul.points li { margin: 4px 0; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 20px 24px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--border); font-size: 14px; }
+.chip.accent { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+/* Screen sketches */
+.screens { display: grid; gap: 32px; }
+/* Grid items would otherwise grow to their widest line and push the page past a phone screen */
+.screens > div, .rules > .rule, .two > .card { min-width: 0; }
+.screen-title { font-family: var(--font-serif); font-size: 19px; font-weight: 500; margin: 0 0 8px; }
+.device { position: relative; background: var(--background); border: 1px solid var(--border); border-radius: 12px; padding: 0 18px 18px; overflow: hidden; }
+.device.whole-new { outline: 2px dashed var(--accent); outline-offset: 4px; overflow: visible; }
+.appbar { font-family: var(--font-serif); font-size: 17px; font-weight: 500; padding: 12px 0; border-bottom: 1px solid var(--line-soft); margin: 0 -18px 16px; padding-left: 18px; }
+.back { font-size: 13px; color: var(--muted-foreground); margin-bottom: 10px; }
+.pagehead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 16px; border-bottom: 2px solid var(--foreground); padding-bottom: 8px; margin-bottom: 12px; }
+.pagehead .h { font-family: var(--font-serif); font-size: 28px; letter-spacing: -0.015em; }
+.links { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; font-weight: 500; color: var(--accent); }
+.links .new-link { outline: 2px dashed var(--accent); outline-offset: 3px; border-radius: var(--radius-control); }
+.search { background: var(--input-surface); border: 1px solid var(--input); border-radius: var(--radius-control); padding: 8px 12px; color: var(--placeholder); font-size: 14px; margin-bottom: 12px; }
+.filter { display: flex; flex-wrap: wrap; gap: 6px; }
+.fchip { font-size: 13px; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--input); background: var(--card); white-space: nowrap; }
+.fchip.on { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.summary { font-size: 13px; color: var(--subtle); margin: 12px 0 8px; }
+.list { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--line-soft); }
+.row:first-child { border-top: 0; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--muted); color: var(--muted-foreground); display: grid; place-items: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.who { flex: 1; min-width: 0; }
+.name { font-family: var(--font-serif); font-size: 16px; }
+.meta { font-size: 13px; color: var(--subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta.wrap { white-space: normal; }
+/* The row line clips its overflow, so the dashed "new" frame needs room inside it */
+.meta { padding: 3px 3px 3px 3px; margin: -3px 0 -3px -3px; }
+.meta .mark { display: inline-block; padding-left: 2px; margin-right: 4px; line-height: 1.2; }
+.badge { display: inline-block; font-size: 12px; line-height: 1.3; padding: 1px 7px; border-radius: var(--radius-control); background: var(--muted); color: var(--muted-foreground); margin-right: 4px; vertical-align: 1px; }
+.badge.x::after { content: " ×"; color: var(--subtle); }
+.right { font-size: 13px; font-weight: 500; white-space: nowrap; }
+.chev { color: var(--placeholder); }
+.is-new { position: relative; outline: 2px dashed var(--accent); outline-offset: 4px; border-radius: var(--radius-control); }
+.new-tag { position: absolute; top: -12px; right: 10px; background: var(--accent); color: var(--accent-foreground); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 8px; border-radius: 999px; z-index: 2; white-space: nowrap; }
+.mark { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: var(--radius-control); }
+.btn { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: var(--radius-control); border: 1px solid var(--input); background: var(--card); white-space: nowrap; }
+.btn.dark { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.btn.danger { background: var(--destructive); color: #fff; border-color: var(--destructive); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.plus { color: var(--accent); border-style: dashed; border-color: var(--accent); }
+.input { flex: 1; min-width: 120px; background: var(--input-surface); border: 1px solid var(--input); border-radius: var(--radius-control); padding: 5px 10px; font-size: 14px; color: var(--foreground); }
+.input.ph { color: var(--placeholder); }
+.formrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.grow { flex: 1; min-width: 0; }
+.state-note { font-size: 12px; color: var(--accent); font-style: italic; margin-bottom: 4px; }
+.details { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); }
+.detail { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center; padding: 9px 16px; border-top: 1px solid var(--line-soft); font-size: 14px; }
+.detail:first-child { border-top: 0; }
+.detail .k { color: var(--subtle); }
+.cardhead { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.cardhead .avatar { width: 48px; height: 48px; font-size: 15px; }
+.cardhead .nm { font-family: var(--font-serif); font-size: 24px; line-height: 1.2; }
+.popover { position: relative; margin: 6px 16px 10px 178px; width: 260px; max-width: calc(100% - 32px); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: 0 16px 32px -12px rgba(40, 30, 15, 0.35); padding: 8px; font-size: 14px; }
+.popover .opt { padding: 5px 8px; border-radius: var(--radius-control); }
+.popover .opt:hover { background: var(--field); }
+.popover .sep { border-top: 1px solid var(--line-soft); margin: 6px 0 8px; }
+.popover .lbl { font-size: 12px; color: var(--subtle); margin: 0 0 4px 2px; }
+.callouts { margin: 10px 0 0; padding-left: 20px; font-size: 14px; color: var(--muted-foreground); }
+.callouts li { margin: 3px 0; }
+
+/* Rules: full-width strips, one under another */
+.rules { display: grid; gap: 12px; }
+.rule { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 14px 18px; }
+.rule .h { font-weight: 600; margin-bottom: 4px; }
+.example { font-size: 14px; color: var(--muted-foreground); background: var(--secondary); border-left: 3px solid var(--accent); padding: 6px 10px; margin-top: 8px; border-radius: 0 var(--radius-control) var(--radius-control) 0; }
+table.t { border-collapse: collapse; width: 100%; font-size: 14px; margin-top: 8px; }
+table.t th, table.t td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+table.t th { color: var(--subtle); font-weight: 500; }
+table.t td.new { color: var(--accent); font-weight: 500; }
+.tablewrap { overflow-x: auto; }
+
+/* Data model */
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; color: var(--muted-foreground); margin: 8px 0; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--input); background: var(--secondary); }
+.sw.new { border-color: var(--accent); background: var(--accent-soft); }
+.schema { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); overflow-x: auto; margin: 10px 0 6px; }
+.schema svg { display: block; width: 100%; min-width: 760px; height: auto; }
+.scroll-hint { display: none; font-size: 13px; color: var(--subtle); }
+.box { fill: var(--secondary); stroke: var(--input); stroke-width: 1.5; }
+.box.new { fill: var(--accent-soft); stroke: var(--accent); }
+.head { fill: var(--muted); }
+.head.new { fill: var(--accent); }
+.tname { font: 500 14px ui-monospace, Menlo, monospace; fill: var(--foreground); }
+.tname.on-accent { fill: var(--accent-foreground); }
+.tru { font: 400 13px var(--font-sans); fill: var(--muted-foreground); }
+.tru.on-accent { fill: var(--accent-foreground); opacity: 0.9; }
+.frow { font: 400 13px ui-monospace, Menlo, monospace; fill: var(--foreground); }
+.frow .ru { font-family: var(--font-sans); fill: var(--muted-foreground); }
+.link { fill: none; stroke: var(--subtle); stroke-width: 1.5; }
+.link.new { stroke: var(--accent); stroke-width: 2; }
+.arrow { fill: var(--subtle); }
+.arrow.new { fill: var(--accent); }
+.note { font: 400 13px var(--font-sans); fill: var(--subtle); }
+.note.new { fill: var(--accent); font-weight: 500; }
+.ghost { fill: none; stroke: var(--input); stroke-width: 1.5; stroke-dasharray: 6 6; }
+.lookup { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 12px 0; }
+.who-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 16px 18px; display: grid; gap: 10px; }
+.who-box h3 { margin: 0; font-size: 18px; }
+.ask { font-family: ui-monospace, Menlo, monospace; font-size: 13px; background: var(--secondary); border: 1px solid var(--line-soft); border-radius: var(--radius-control); padding: 8px 10px; overflow-wrap: anywhere; }
+.ask b { color: var(--accent); font-weight: 500; }
+.result { justify-self: start; font-size: 14px; font-weight: 500; border-radius: 999px; padding: 3px 12px; }
+.result.ok { background: var(--accent-soft); color: var(--accent); }
+.result.no { background: var(--muted); color: var(--muted-foreground); }
+.steps { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 12px; counter-reset: step; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 40px 1fr; gap: 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 16px 18px; }
+.steps li::before { content: counter(step); font: 500 26px/1 var(--font-serif); color: var(--subtle); }
+.steps h3 { margin: 0 0 4px; font-size: 18px; }
+.steps p { margin: 0; color: var(--muted-foreground); font-size: 15px; }
+.okchip { display: inline-block; font-size: 12px; font-weight: 500; color: var(--muted-foreground); background: var(--muted); border-radius: 999px; padding: 1px 10px; margin-left: 8px; vertical-align: 2px; font-family: var(--font-sans); }
+.callout { border-left: 3px solid var(--accent); padding: 4px 0 4px 18px; margin: 16px 0; }
+.callout h3 { margin: 0 0 4px; }
+.callout p { color: var(--muted-foreground); margin: 0; }
+
+/* Checklist */
+.prep { background: var(--secondary); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 12px 16px; font-size: 14px; color: var(--muted-foreground); }
+.prep ol { margin: 6px 0 0; padding-left: 20px; }
+.legend2 { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted-foreground); margin: 12px 0 0; }
+.cap { font-family: var(--font-sans); font-size: 12px; color: var(--subtle); font-weight: 400; margin-left: 8px; }
+.check-group { margin-bottom: 18px; }
+.check { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; background: var(--card); border: 1px solid var(--line-soft); border-radius: var(--radius-card); margin: 6px 0; cursor: pointer; }
+.check input { margin-top: 5px; accent-color: var(--accent); width: 16px; height: 16px; flex-shrink: 0; }
+.check .sc { font-weight: 600; }
+.check .st { font-size: 14px; color: var(--muted-foreground); }
+.check .st .arrow-t { color: var(--accent); font-weight: 700; }
+.tag { display: inline-block; font-size: 11px; font-weight: 500; padding: 0 7px; border-radius: 999px; margin-left: 6px; vertical-align: 2px; white-space: nowrap; }
+.tag.new { background: var(--accent); color: var(--accent-foreground); }
+.tag.old { background: var(--muted); color: var(--muted-foreground); }
+.tag.auto { border: 1px solid var(--accent); color: var(--accent); }
+.tag.hand { border: 1px dashed var(--subtle); color: var(--subtle); }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.box-col h3 { margin-top: 0; }
+footer { margin-top: 64px; font-size: 13px; color: var(--placeholder); }
+
+@media (max-width: 720px) {
+  h1 { font-size: 34px; }
+  h2 { font-size: 24px; }
+  .two { grid-template-columns: 1fr; }
+  .detail { grid-template-columns: 1fr; gap: 4px; }
+  .popover { margin-left: 16px; }
+  .scroll-hint { display: block; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="top">Личная CRM · обзор фичи</header>
+<h1>Группы контактов</h1>
+<p class="lead">Людей можно раскладывать по группам, которые вы создаёте сами: «Семья», «Друзья», «Теннис», «Аналитики». Один человек может быть сразу в нескольких группах. На главной выбираете группу — и видите только её людей.</p>
+<div class="chips">
+  <span class="chip accent">Спроектирована, ещё не сделана</span>
+  <span class="chip">Задачи: 0 из 36</span>
+  <span class="chip">Автотестов пока нет: в плане 59 из 85 сценариев</span>
+  <span class="chip">Изменение <code>groups</code>, ветка <code>groups</code></span>
+</div>
+
+<!-- 1 -->
+<h2><span class="num">1</span>Коротко</h2>
+<ul class="points">
+  <li>Группы создаёте вы сами, заранее заготовленных нет. Человек может быть в нескольких группах или ни в одной.</li>
+  <li>Новая страница «Группы»: все группы с числом людей. Группу можно создать, переименовать и удалить; люди при удалении остаются.</li>
+  <li>Группы человеку ставятся только в его карточке: кнопка «+ группа», убрать — крестиком на метке. Форма контакта не меняется.</li>
+  <li>На главной под поиском — ряд меток «Все» и группы. Поиск, страницы и подпись работают внутри выбранной группы.</li>
+  <li>Группы человека видны маленькими метками: в карточке, в строке списка на главной и на «Пора связаться».</li>
+  <li>Статус: <b>спроектирована</b>. Готовы требования (85 сценариев), технический план и 36 задач, ни одна ещё не сделана. Автотестов (программ, которые сами проходят сценарий и сверяют результат) в проекте пока нет: первым шагом подключаем Vitest. Он проверит 59 сценариев, остальные 26 касаются только вида в браузере — их до подключения e2e-тестов проверяем руками.</li>
+</ul>
+
+<!-- 2 -->
+<h2><span class="num">2</span>Что появится на экранах</h2>
+<p class="muted small">Наброски, не точные макеты. Новое обведено пунктиром. Имена и числа выдуманы.</p>
+
+<div class="screens">
+
+  <div>
+    <p class="screen-title">Главная, выбрана группа «Теннис»</p>
+    <div class="device">
+      <div class="appbar">Личная CRM</div>
+      <div class="pagehead">
+        <span class="h">Контакты</span>
+        <span class="links"><span>◷ Пора связаться · 3</span><span class="new-link">⌗ Группы</span><span>+ Добавить контакт</span></span>
+      </div>
+      <div class="search">⌕ Поиск по имени</div>
+      <div class="is-new"><span class="new-tag">новое</span>
+        <div class="filter"><span class="fchip">Все</span><span class="fchip">Аналитики</span><span class="fchip">Йога</span><span class="fchip">Семья</span><span class="fchip on">Теннис</span></div>
+      </div>
+      <div class="summary"><span class="mark">В группе: 12 контактов</span></div>
+      <div class="list">
+        <div class="row"><span class="avatar">АК</span><div class="who"><div class="name">Анна Ковалёва</div><div class="meta"><span class="mark"><span class="badge">Семья</span><span class="badge">Теннис</span></span> сестра · с детства</div></div><span class="chev">›</span></div>
+        <div class="row"><span class="avatar">БП</span><div class="who"><div class="name">Борис Петров</div><div class="meta"><span class="mark"><span class="badge">Аналитики</span><span class="badge">Теннис</span></span> бывший коллега · корт на Соколе</div></div><span class="chev">›</span></div>
+        <div class="row"><span class="avatar">ИМ</span><div class="who"><div class="name">Иван Морозов</div><div class="meta"><span class="mark"><span class="badge">Теннис</span></span> тренер · по средам</div></div><span class="chev">›</span></div>
+        <div class="row muted small" style="justify-content:center">… ещё 9 человек из «Теннис» …</div>
+      </div>
+    </div>
+    <ul class="callouts">
+      <li>Новая ссылка «Группы» в шапке — между «Пора связаться» и «Добавить контакт».</li>
+      <li>Ряд меток есть, только если создана хотя бы одна группа. Без выбора выделена «Все». Выбрана одна группа за раз.</li>
+      <li>На телефоне ряд меток не переносится, а листается пальцем вбок. На компьютере лишние метки уходят на следующую строку.</li>
+      <li>Метки групп в строке стоят перед «кто это · откуда знакомы». Высота строки прежняя, что не влезло — обрезается.</li>
+      <li>В пустой группе вместо списка: «В группе «Аналитики» пока никого» и кнопка «Показать все контакты». Если поиск в группе ничего не нашёл: «По запросу «анна» в группе «Теннис» никого нет…» и кнопка «Показать всех в группе».</li>
+    </ul>
+  </div>
+
+  <div>
+    <p class="screen-title">Страница «Группы» — новая</p>
+    <div class="device whole-new"><span class="new-tag">новая страница</span>
+      <div class="appbar">Личная CRM</div>
+      <div class="back">← Все контакты</div>
+      <div class="pagehead"><span class="h">Группы</span></div>
+      <div class="formrow" style="margin-bottom:14px"><span class="input ph">Новая группа</span><span class="btn dark">Создать</span></div>
+      <div class="list">
+        <div class="row"><div class="who"><span class="name" style="color:var(--accent)">Аналитики</span> <span class="muted small">— пока никого</span></div><span class="btn ghost">✎ Переименовать</span><span class="btn ghost">🗑 Удалить</span></div>
+        <div class="row" style="display:block">
+          <div class="state-note">так выглядит вопрос перед удалением</div>
+          <div class="small" style="margin-bottom:8px">Удалить группу «Йога»? Люди из неё останутся в контактах, только без этой группы.</div>
+          <div class="formrow"><span class="btn danger">Да, удалить</span><span class="btn ghost">Отмена</span></div>
+        </div>
+        <div class="row"><div class="who"><span class="name" style="color:var(--accent)">Семья</span> <span class="muted small">— 1 контакт</span></div><span class="btn ghost">✎ Переименовать</span><span class="btn ghost">🗑 Удалить</span></div>
+        <div class="row" style="display:block">
+          <div class="state-note">так выглядит переименование</div>
+          <div class="formrow"><span class="input">Теннис по средам</span><span class="btn dark">Сохранить</span><span class="btn ghost">Отмена</span></div>
+        </div>
+      </div>
+    </div>
+    <ul class="callouts">
+      <li>Группы по алфавиту. У каждой — сколько в ней людей: «1 контакт», «12 контактов», у пустой — «пока никого».</li>
+      <li>Нажатие на название группы открывает главную, где выбрана эта группа.</li>
+      <li>Переименование и вопрос об удалении открываются прямо на месте строки. На наброске для примера открыты оба, на деле — одно.</li>
+      <li>Если групп нет: под полем «Пока нет ни одной группы» и подсказка, что первую можно создать здесь или в карточке кнопкой «+ группа».</li>
+    </ul>
+  </div>
+
+  <div>
+    <p class="screen-title">Карточка контакта, открыто окошко «+ группа»</p>
+    <div class="device">
+      <div class="appbar">Личная CRM</div>
+      <div class="back">← Все контакты</div>
+      <div class="cardhead"><span class="avatar">АК</span><div class="grow"><div class="nm">Анна Ковалёва</div><div class="muted small">сестра</div></div><span class="btn">✎ Редактировать</span></div>
+      <div class="details">
+        <div class="is-new" style="outline-offset:0"><span class="new-tag">новое</span>
+          <div class="detail"><span class="k">Группы</span><span><span class="badge x">Семья</span><span class="badge x">Теннис</span> <span class="btn plus">+ группа</span></span></div>
+          <div class="popover">
+            <div class="opt">Аналитики</div>
+            <div class="opt">Йога</div>
+            <div class="sep"></div>
+            <div class="lbl">Новая группа</div>
+            <div class="formrow"><span class="input ph">Название</span><span class="btn dark">Создать</span></div>
+          </div>
+        </div>
+        <div class="detail"><span class="k">Откуда знакомы</span><span>с детства</span></div>
+        <div class="detail"><span class="k">Телефон</span><span style="color:var(--accent)">000 123-45-67</span></div>
+        <div class="detail"><span class="k">Почта</span><span style="color:var(--accent)">anna@example.com</span></div>
+        <div class="detail"><span class="k">Как часто общаться</span><span>Раз в месяц</span></div>
+        <div class="detail"><span class="k">Добавлен</span><span>12 марта 2025 г.</span></div>
+      </div>
+    </div>
+    <ul class="callouts">
+      <li>Строка «Группы» — первая среди сведений. Если человек ни в одной группе, в ней только кнопка «+ группа».</li>
+      <li>В окошке — только группы, где человека ещё нет. Нажал группу — человек в ней, окошко закрылось.</li>
+      <li>Вписал новое название — группа создаётся, человек сразу в ней. Вписал название существующей группы (хоть маленькими буквами) — человек просто добавляется в неё.</li>
+      <li>Escape или нажатие мимо закрывают окошко без изменений.</li>
+      <li>Крестик на метке убирает человека из группы сразу, без вопроса. Группа остаётся, даже пустая.</li>
+      <li>Форма «Редактировать» не меняется: групп в ней нет.</li>
+    </ul>
+  </div>
+
+  <div>
+    <p class="screen-title">«Пора связаться»</p>
+    <div class="device">
+      <div class="appbar">Личная CRM</div>
+      <div class="back">← Все контакты</div>
+      <div class="pagehead"><span class="h">Пора связаться</span></div>
+      <p class="small muted" style="margin:0 0 10px">С этими людьми вы не общались дольше, чем хотели. Сверху — у кого срок прошёл раньше всех.</p>
+      <div class="list">
+        <div class="row"><span class="avatar">БП</span><div class="who"><div class="name">Борис Петров</div><div class="meta wrap">Раз в неделю · Последняя заметка: 1 октября 2026 г. <span class="mark"><span class="badge">Аналитики</span><span class="badge">Теннис</span></span></div></div><span class="right">просрочено на 16 дней</span><span class="chev">›</span></div>
+        <div class="row"><span class="avatar">ВС</span><div class="who"><div class="name">Вера Смирнова</div><div class="meta wrap">Раз в месяц · заметок ещё нет</div></div><span class="right" style="color:var(--accent)">пора сегодня</span><span class="chev">›</span></div>
+      </div>
+    </div>
+    <ul class="callouts">
+      <li>Метки групп идут сразу после частоты и даты последней заметки. Здесь строка не обрезается: на телефоне метки переносятся ниже.</li>
+      <li>У человека без групп строка такая же, как сейчас. Фильтра по группам на этой странице нет.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 3 -->
+<h2><span class="num">3</span>Как это работает</h2>
+<div class="rules">
+  <div class="rule">
+    <div class="h">Группы создаёте вы сами</div>
+    <p>После обновления групп нет. Создать группу можно на странице «Группы» или прямо в карточке, вписав название в «+ группа». Человек может быть в скольких угодно группах.</p>
+    <div class="example">Анна в «Семья» и в «Теннис» → она есть в списке и при выборе «Семья», и при выборе «Теннис».</div>
+  </div>
+  <div class="rule">
+    <div class="h">Правила названия</div>
+    <ul class="points">
+      <li>Название обязательно и не длиннее 40 символов. Пробелы в начале и в конце отбрасываются.</li>
+      <li>Двух групп с одинаковым названием быть не может. Большие и маленькие буквы не различаются: «Семья» и «семья» — одно и то же.</li>
+    </ul>
+    <div class="example">Пустое поле → «Укажите название группы».<br>41 символ → «Название — не длиннее 40 символов», текст остаётся в поле.<br>Есть «Семья», создаю «семья» → «Группа «Семья» уже есть».</div>
+  </div>
+  <div class="rule">
+    <div class="h">Везде по алфавиту</div>
+    <p>На странице «Группы», в ряду меток, в карточке, в строках списка и на «Пора связаться» группы идут по алфавиту, без учёта больших и маленьких букв.</p>
+    <div class="example">Созданы «Теннис», «аналитики», «Семья» → показываются «аналитики», «Семья», «Теннис».</div>
+  </div>
+  <div class="rule">
+    <div class="h">Поставить и убрать группу — только в карточке</div>
+    <ul class="points">
+      <li>«+ группа» → нажать готовую группу или вписать название.</li>
+      <li>Вписано название существующей группы → человек добавляется в неё, новой не появляется. Человек уже в ней → ничего не меняется.</li>
+      <li>Крестик на метке → человек сразу убран из группы. Группа остаётся, даже если в ней никого.</li>
+    </ul>
+    <div class="example">В «Йога» один человек, убираю его крестиком → на странице «Группы» «Йога — пока никого».</div>
+  </div>
+  <div class="rule">
+    <div class="h">Переименование не теряет людей и ссылки</div>
+    <p>После переименования люди остаются в группе, новое название сразу видно везде. Сохранённая ссылка на группу продолжает работать: в адресе хранится номер группы, а не её название.</p>
+    <div class="example">Скопировал адрес главной с «Теннис», переименовал в «Теннис по средам», открыл адрес → выделена «Теннис по средам», те же люди.</div>
+  </div>
+  <div class="rule">
+    <div class="h">Удаление группы не удаляет людей</div>
+    <p>Перед удалением вопрос на месте: «Удалить группу «Теннис»? Люди из неё останутся в контактах, только без этой группы.» После удаления группы нет нигде, а её люди остаются со всеми данными, заметками и другими группами.</p>
+    <div class="example">Анна в «Теннис» и «Семья», удаляю «Теннис» → Анна в контактах, заметки на месте, осталась метка «Семья». Число контактов на главной не изменилось.</div>
+  </div>
+  <div class="rule">
+    <div class="h">Выбранная группа — фильтр для всего списка</div>
+    <p>Выбрал группу — в списке только её люди, в том же порядке (новые сверху), по 50 на страницу. Подпись над списком считает людей внутри группы.</p>
+    <div class="tablewrap"><table class="t">
+      <tr><th>Что на экране</th><th>Подпись над списком</th></tr>
+      <tr><td>Группа «Теннис», 12 человек</td><td class="new">В группе: 12 контактов</td></tr>
+      <tr><td>Группа «Работа», 120 человек, 2-я страница</td><td class="new">Показаны 51–100 из 120</td></tr>
+      <tr><td>Группа «Теннис», поиск нашёл 3</td><td class="new">Найдено: 3 из 12</td></tr>
+      <tr><td>Без группы, 998 контактов, 2-я страница</td><td>Показаны 51–100 из 998 — как раньше</td></tr>
+      <tr><td>Без группы, поиск нашёл 7</td><td>Найдено: 7 из 998 — как раньше</td></tr>
+    </table></div>
+  </div>
+  <div class="rule">
+    <div class="h">Что сохраняется при переключениях</div>
+    <div class="tablewrap"><table class="t">
+      <tr><th>Что я делаю</th><th>Поиск</th><th>Группа</th><th>Страница</th></tr>
+      <tr><td>Выбираю другую группу</td><td>остаётся</td><td>новая</td><td>первая</td></tr>
+      <tr><td>Нажимаю «Все»</td><td>остаётся</td><td>снята</td><td>первая</td></tr>
+      <tr><td>Меняю текст поиска</td><td>новый</td><td>остаётся</td><td>первая</td></tr>
+      <tr><td>Очищаю поиск крестиком</td><td>пусто</td><td>остаётся</td><td>первая</td></tr>
+      <tr><td>Листаю страницы</td><td>остаётся</td><td>остаётся</td><td>выбранная</td></tr>
+      <tr><td>«Все контакты» с карточки, «Группы», «Пора связаться», «Добавить контакт»</td><td colspan="3">как было, когда я последний раз открывал список в этой вкладке</td></tr>
+      <tr><td>«Личная CRM» в шапке</td><td>пусто</td><td>снята</td><td>первая</td></tr>
+    </table></div>
+    <div class="example">Группа, поиск и страница записаны в адресе. Скопировал адрес «Работа», 2-я страница → в другом браузере та же группа и та же страница.</div>
+  </div>
+  <div class="rule">
+    <div class="h">Ссылка на группу, которой нет</div>
+    <p>Если группу удалили, а у вас осталась ссылка, или в адресе вместо группы что-то не то, — показываются все контакты, выделена «Все». Ошибки нет.</p>
+  </div>
+</div>
+
+<!-- 4 -->
+<h2><span class="num">4</span>Модель данных до и после</h2>
+<p>Модель данных — какие таблицы лежат в базе и какие в них поля. Фича добавляет две новые таблицы. Старые таблицы не меняются.</p>
+
+<h3>Сейчас</h3>
+<p class="scroll-hint">Схему можно листать вбок.</p>
+<div class="schema">
+  <svg viewBox="0 0 880 440" role="img" aria-label="Схема сейчас: contacts и notes">
+    <defs>
+      <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow"/></marker>
+    </defs>
+    <path class="link" d="M165 226 V296" marker-end="url(#a1)"/>
+    <text class="note" x="178" y="266">у контакта много заметок</text>
+
+    <rect class="box" x="40" y="30" width="250" height="196" rx="8"/>
+    <path class="head" d="M48 30 H282 A8 8 0 0 1 290 38 V66 H40 V38 A8 8 0 0 1 48 30 Z"/>
+    <text class="tname" x="56" y="53">contacts</text><text class="tru" x="274" y="53" text-anchor="end">контакты</text>
+    <text class="frow" x="56" y="90">id</text>
+    <text class="frow" x="56" y="114">name, about, how_met</text>
+    <text class="frow" x="56" y="138">phone, email</text>
+    <text class="frow" x="56" y="162">touch_frequency</text>
+    <text class="frow" x="56" y="186">touch_restarted_at</text>
+    <text class="frow" x="56" y="210">created_at, updated_at</text>
+
+    <rect class="box" x="40" y="300" width="250" height="124" rx="8"/>
+    <path class="head" d="M48 300 H282 A8 8 0 0 1 290 308 V336 H40 V308 A8 8 0 0 1 48 300 Z"/>
+    <text class="tname" x="56" y="323">notes</text><text class="tru" x="274" y="323" text-anchor="end">заметки</text>
+    <text class="frow" x="56" y="360">id</text>
+    <text class="frow" x="56" y="384">contact_id</text>
+    <text class="frow" x="56" y="408">body, created_at</text>
+
+    <rect class="ghost" x="420" y="110" width="420" height="200" rx="8"/>
+    <text class="note" x="630" y="206" text-anchor="middle">групп в базе нет:</text>
+    <text class="note" x="630" y="226" text-anchor="middle">ни таблицы групп, ни отметок «кто в какой группе»</text>
+  </svg>
+</div>
+
+<h3>После</h3>
+<div class="legend"><span><i class="sw new"></i>новое</span><span><i class="sw"></i>как было</span></div>
+<p class="scroll-hint">Схему можно листать вбок.</p>
+<div class="schema">
+  <svg viewBox="0 0 880 440" role="img" aria-label="Схема после: contacts и notes как было, новые groups и contact_groups">
+    <defs>
+      <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow"/></marker>
+      <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="arrow new"/></marker>
+    </defs>
+    <path class="link" d="M165 226 V296" marker-end="url(#a2)"/>
+    <text class="note" x="178" y="266">у контакта много заметок</text>
+    <path class="link new" d="M290 128 H400 V246" marker-end="url(#a3)"/>
+    <path class="link new" d="M715 178 V212 H480 V246" marker-end="url(#a3)"/>
+    <text class="note new" x="440" y="372" text-anchor="middle">кто в какой группе: многие ко многим</text>
+    <text class="note new" x="440" y="392" text-anchor="middle">удалили контакт или группу — его строки тут исчезают сами</text>
+
+    <rect class="box" x="40" y="30" width="250" height="196" rx="8"/>
+    <path class="head" d="M48 30 H282 A8 8 0 0 1 290 38 V66 H40 V38 A8 8 0 0 1 48 30 Z"/>
+    <text class="tname" x="56" y="53">contacts</text><text class="tru" x="274" y="53" text-anchor="end">как было</text>
+    <text class="frow" x="56" y="90">id</text>
+    <text class="frow" x="56" y="114">name, about, how_met</text>
+    <text class="frow" x="56" y="138">phone, email</text>
+    <text class="frow" x="56" y="162">touch_frequency</text>
+    <text class="frow" x="56" y="186">touch_restarted_at</text>
+    <text class="frow" x="56" y="210">created_at, updated_at</text>
+
+    <rect class="box" x="40" y="300" width="250" height="124" rx="8"/>
+    <path class="head" d="M48 300 H282 A8 8 0 0 1 290 308 V336 H40 V308 A8 8 0 0 1 48 300 Z"/>
+    <text class="tname" x="56" y="323">notes</text><text class="tru" x="274" y="323" text-anchor="end">как было</text>
+    <text class="frow" x="56" y="360">id</text>
+    <text class="frow" x="56" y="384">contact_id</text>
+    <text class="frow" x="56" y="408">body, created_at</text>
+
+    <rect class="box new" x="590" y="30" width="250" height="148" rx="8"/>
+    <path class="head new" d="M598 30 H832 A8 8 0 0 1 840 38 V66 H590 V38 A8 8 0 0 1 598 30 Z"/>
+    <text class="tname on-accent" x="606" y="53">groups</text><text class="tru on-accent" x="824" y="53" text-anchor="end">группы</text>
+    <text class="frow" x="606" y="90">id</text>
+    <text class="frow" x="606" y="114">name</text>
+    <text class="frow" x="606" y="138"><tspan class="ru">не повторяется, регистр не важен</tspan></text>
+    <text class="frow" x="606" y="162">created_at</text>
+
+    <rect class="box new" x="315" y="250" width="250" height="100" rx="8"/>
+    <path class="head new" d="M323 250 H557 A8 8 0 0 1 565 258 V286 H315 V258 A8 8 0 0 1 323 250 Z"/>
+    <text class="tname on-accent" x="331" y="273">contact_groups</text>
+    <text class="frow" x="331" y="310">contact_id <tspan class="ru">— кто</tspan></text>
+    <text class="frow" x="331" y="334">group_id <tspan class="ru">— в какой группе</tspan></text>
+  </svg>
+</div>
+
+<ul class="points">
+  <li><b>groups</b> — сами группы: номер, название, когда создана. База сама не даст завести вторую группу с тем же названием, даже если отправить его из двух вкладок одновременно.</li>
+  <li><b>contact_groups</b> — отметки «этот человек в этой группе», по одной строке на каждую пару. Одна и та же пара дважды не запишется.</li>
+  <li>Удалили группу — все её отметки исчезают сами, люди остаются. Удалили контакт — исчезают его отметки, группы остаются.</li>
+  <li>В адресе главной хранится номер группы (<code>/?group=12</code>), поэтому ссылка переживает переименование.</li>
+</ul>
+
+<h3>Как список находит людей группы</h3>
+<p>Пример: выбрана «Теннис» (номер 3). Список берёт только тех, у кого есть отметка «в группе 3».</p>
+<div class="lookup">
+  <div class="who-box">
+    <h3>Анна Ковалёва</h3>
+    <div class="ask">есть отметка <b>Анна — группа 3</b>?</div>
+    <span class="result ok">Есть: Анна в списке «Теннис»</span>
+  </div>
+  <div class="who-box">
+    <h3>Вера Смирнова</h3>
+    <div class="ask">есть отметка <b>Вера — группа 3</b>?</div>
+    <span class="result no">Нет: в «Теннис» её не видно</span>
+  </div>
+</div>
+
+<h3>Миграция</h3>
+<p>Миграция — скрипт, который меняет устройство базы. Здесь она одна: <code>drizzle/0002_groups.sql</code>. При выкатке она выполняется до старта новой версии.</p>
+<ol class="steps">
+  <li><div><h3>Таблица groups<span class="okchip">данные не трогает</span></h3><p>Новая пустая таблица и правило «название не повторяется, регистр не важен».</p></div></li>
+  <li><div><h3>Таблица contact_groups<span class="okchip">данные не трогает</span></h3><p>Новая пустая таблица, связанная с контактами и группами, и указатель для быстрого поиска людей группы.</p></div></li>
+</ol>
+
+<div class="tablewrap"><table class="t">
+  <tr><th>Что в базе</th><th>До выкатки</th><th>После выкатки</th></tr>
+  <tr><td>Контакты</td><td>1000</td><td>1000, не трогались</td></tr>
+  <tr><td>Заметки</td><td>4000</td><td>4000, не трогались</td></tr>
+  <tr><td>Группы</td><td>таблицы нет</td><td class="new">0 — создаёте сами</td></tr>
+  <tr><td>Кто в какой группе</td><td>таблицы нет</td><td class="new">0</td></tr>
+</table></div>
+<p class="small muted">Числа для примера.</p>
+
+<div class="callout">
+  <h3>Как откатиться</h3>
+  <p>Откат — вручную, его запускаете вы. Прошлая версия приложения новых таблиц не знает и просто их не читает, поэтому её можно вернуть без отката базы. Созданные группы при этом сохранятся в базе и снова появятся, когда вернётся новая версия.</p>
+</div>
+
+<!-- 5 -->
+<h2><span class="num">5</span>Как проверить руками</h2>
+<div class="prep">
+  <b>Фича ещё не сделана: этот список пригодится после реализации.</b>
+  <ol>
+    <li>Запустите базу и приложение: <code>docker compose up -d</code>, затем <code>pnpm dev</code>, откройте <code>localhost:3001</code>.</li>
+    <li>Тестовые контакты: <code>pnpm db:seed</code>. Работает только на пустой базе.</li>
+    <li>Создайте группы «Аналитики», «Семья», «Теннис» и добавьте в них нескольких людей через карточку.</li>
+    <li>Для сценария «Большая группа» нужно 120 человек в одной группе. Через карточки это долго — агент положит их запросом к локальной базе (это есть в задаче 6.4).</li>
+    <li>Вид на телефоне: в Chrome откройте инструменты разработчика (⌥⌘I), включите режим телефона и задайте ширину 375.</li>
+  </ol>
+  Галочки на этой странице только для удобства и не сохраняются.
+</div>
+<div class="legend2">
+  <span><span class="tag new">новое</span> сценарий этой фичи</span>
+  <span><span class="tag old">как было</span> проверить, что не сломалось</span>
+  <span><span class="tag auto">будет автотест</span> Vitest проверит данные и тексты</span>
+  <span><span class="tag hand">руками до e2e</span> только вид и поведение в браузере</span>
+</div>
+<div id="checklist"></div>
+
+<!-- 6 -->
+<h2><span class="num">6</span>Что агент решил сам</h2>
+<div class="two">
+  <div class="card box-col">
+    <h3>Продуктовые — стоит просмотреть</h3>
+    <p class="small muted">Вы решили: где ставить группы, страница «Группы» с правкой, фильтр по одной группе в виде ряда меток, где видны метки, старт без групп, «+ группа» умеет создавать. Остальное ниже придумал агент.</p>
+    <ul class="points small">
+      <li>Название не длиннее 40 символов; «Семья» и «семья» — одна группа.</li>
+      <li>Группы везде по алфавиту.</li>
+      <li>Строка «Группы» — первая в карточке, перед «Откуда знакомы».</li>
+      <li>Крестик убирает из группы без вопроса; пустая группа остаётся.</li>
+      <li>Название существующей группы в «+ группа» добавляет в неё; если человек уже там — ничего не меняется.</li>
+      <li>Удаление группы — с вопросом на месте строки и этим текстом вопроса.</li>
+      <li>На странице «Группы» число людей — «12 контактов», у пустой — «пока никого»; название ведёт на главную с этой группой.</li>
+      <li>Ссылка «Группы» в шапке главной — между «Пора связаться» и «Добавить контакт».</li>
+      <li>Подпись с группой без её названия: «В группе: 12 контактов», «Найдено: 3 из 12».</li>
+      <li>При смене группы поиск остаётся; очистка поиска оставляет группу; «Все» оставляет поиск; «Личная CRM» в шапке сбрасывает всё.</li>
+      <li>Ссылка на удалённую группу открывает все контакты, без ошибки.</li>
+      <li>Тексты и кнопки пустой группы («Показать все контакты») и пустого поиска в группе («Показать всех в группе»).</li>
+      <li>В строке списка метки перед «кто это», строка прежней высоты, лишнее обрезается.</li>
+      <li>На «Пора связаться» метки после частоты и даты последней заметки, переносятся на телефоне.</li>
+      <li>Ряд меток не прилипает к верху экрана вместе с поиском.</li>
+    </ul>
+  </div>
+  <div class="card box-col">
+    <h3>Технические — на экраны не влияют</h3>
+    <ul class="points small">
+      <li>Две новые таблицы со связью «многие ко многим» вместо списка групп внутри контакта: так переименование и удаление меняют одну строку.</li>
+      <li>Группа в адресе — по номеру, а не по названию.</li>
+      <li>Повтор названия запрещает сама база, а не только проверка в коде: две вкладки одновременно дубль не создадут.</li>
+      <li>При удалении группы или контакта отметки «кто в какой группе» удаляются базой сами.</li>
+      <li>Метки групп для целой страницы списка берутся одним запросом.</li>
+      <li>Окошко «+ группа» и метки — готовые компоненты shadcn/ui (библиотеки готовых элементов интерфейса) на уже установленной библиотеке. Если они потянут новый пакет — агент остановится и спросит.</li>
+      <li>Автотесты: Vitest и отдельная база с окончанием <code>_test</code> в том же Docker. Тесты сами её создают, в <code>.env</code> ничего добавлять не нужно. Рабочую базу очищать отказываются.</li>
+      <li>Ошибки базы пишутся в журнал без названий групп: это ваши данные.</li>
+      <li>Миграция только добавляет таблицы, поэтому откат приложения не требует отката базы.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 7 -->
+<h2><span class="num">7</span>Что осталось неясным</h2>
+<div class="card">
+  <p><b>Нажатие на метку группы — куда-нибудь ведёт?</b></p>
+  <p class="small">В требованиях не сказано. Сейчас метка в карточке не нажимается, нажимается только крестик на ней. Можно сделать так, что нажатие на «Теннис» открывает главную с этой группой. Это не мешает начать реализацию.</p>
+  <p style="margin-top:16px"><b>Нужна ли метка «Без группы»?</b></p>
+  <p class="small">Группы ставятся по одному человеку в карточке. Метка «Без группы» в ряду над списком показала бы, кого ещё не разложили. В требованиях её нет — это можно добавить позже отдельной правкой.</p>
+</div>
+
+<footer>Собрано по <code>openspec/changes/groups/</code>: proposal.md, specs/, design.md, tasks.md. Код ещё не написан. Страница только показывает, ничего не меняет.</footer>
+</div>
+
+<script>
+// Checklist data: [scenario, what to do, what should happen, "new" | "old", "auto" | "hand"]
+const groups = [
+  ["Группы создаёт пользователь", [
+    ["После обновления групп нет", "Сразу после обновления откройте «Группы»", "ни одной группы", "new", "auto"],
+    ["Человек в нескольких группах", "Добавьте Анну в «Семья» и в «Теннис»", "в карточке обе метки; Анна в списке и при выборе «Семья», и при выборе «Теннис»", "new", "auto"],
+    ["Те же группы в другом браузере", "Откройте карточку Анны и «Группы» в другом браузере", "у Анны та же группа, на «Группы» те же группы и числа", "new", "auto"],
+  ]],
+  ["Название группы", [
+    ["Пустое название", "На «Группы» нажмите «Создать» с пустым полем, потом с одними пробелами", "группа не создана, под полем «Укажите название группы»", "new", "auto"],
+    ["Слишком длинное название", "Введите название из 41 символа и нажмите «Создать»", "«Название — не длиннее 40 символов», ваш текст остался в поле", "new", "auto"],
+    ["Такая группа уже есть", "Есть «Семья» — создайте «семья»", "«Группа «Семья» уже есть», новой группы нет", "new", "auto"],
+    ["Пробелы по краям", "Создайте «  Теннис  »", "группа называется «Теннис»", "new", "auto"],
+  ]],
+  ["Группы по алфавиту", [
+    ["Порядок групп", "Создайте «Теннис», «аналитики», «Семья» и добавьте Анну во все три", "на «Группы», в ряду меток и в карточке: «аналитики», «Семья», «Теннис»", "new", "auto"],
+  ]],
+  ["Страница «Группы»", [
+    ["Что видно о группах", "В «Теннис» 12 человек, в «Семья» 1, «Аналитики» пустая — откройте «Группы»", "«Аналитики — пока никого», «Семья — 1 контакт», «Теннис — 12 контактов»", "new", "auto"],
+    ["Создание группы", "Впишите «Теннис» и нажмите «Создать»; потом создайте ещё одну клавишей Enter", "группа на своём месте по алфавиту, «пока никого», поле очистилось", "new", "auto"],
+    ["Переход к людям группы", "Нажмите «Теннис»", "главная, выделена «Теннис», в списке только её люди", "new", "auto"],
+    ["Число после удаления контакта", "Удалите одного из 12 человек «Теннис»", "у «Теннис» «11 контактов»", "new", "auto"],
+  ]],
+  ["Пустая страница «Группы»", [
+    ["Групп нет", "Откройте «Группы», когда групп нет", "поле «Новая группа», «Пока нет ни одной группы» и подсказка", "new", "hand"],
+  ]],
+  ["Ссылка «Группы» в шапке главной", [
+    ["Переход на страницу «Группы»", "Нажмите «Группы» в шапке главной", "открылась страница «Группы»", "new", "hand"],
+    ["Шапка на телефоне", "Откройте главную на ширине 375", "«Пора связаться», «Группы», «Добавить контакт» видны целиком, страница вбок не уезжает", "new", "hand"],
+  ]],
+  ["Переименование группы", [
+    ["Переименовать", "У «Теннис» (12 человек) «Переименовать» → «Теннис по средам» → «Сохранить»", "«Теннис по средам — 12 контактов»; новое название в ряду меток и в карточках", "new", "auto"],
+    ["Отмена переименования", "«Переименовать», поменяйте текст, «Отмена»", "название прежнее", "new", "hand"],
+    ["Название занято другой группой", "Переименуйте «Теннис» в «семья»", "«Группа «Семья» уже есть», название прежнее, ваш текст в поле", "new", "auto"],
+    ["Смена только больших и маленьких букв", "Переименуйте «теннис» в «Теннис»", "группа «Теннис», ошибки нет", "new", "auto"],
+    ["Сохранённый адрес группы после переименования", "Выберите «Теннис» на главной, скопируйте адрес, переименуйте группу, откройте адрес", "выделена «Теннис по средам», те же люди", "new", "auto"],
+  ]],
+  ["Удаление группы", [
+    ["Вопрос перед удалением", "Нажмите «Удалить» у «Теннис»", "«Удалить группу «Теннис»? Люди из неё останутся в контактах, только без этой группы.», кнопки «Да, удалить» и «Отмена»", "new", "hand"],
+    ["Отмена удаления", "«Удалить», потом «Отмена»", "группа на месте с прежним числом", "new", "hand"],
+    ["Удаление группы", "Анна в «Теннис» и «Семья» — удалите «Теннис»", "«Теннис» нигде нет; Анна на месте с заметками и «Семья»; число контактов на главной то же", "new", "auto"],
+  ]],
+  ["Строка «Группы» в карточке", [
+    ["Человек в группах", "Откройте карточку Анны (она в «Теннис» и «Семья»)", "«Семья ×», «Теннис ×», «+ группа»", "new", "auto"],
+    ["Человек без групп", "Откройте карточку человека без групп, в том числе добавленного до фичи", "в строке «Группы» только «+ группа»", "new", "auto"],
+  ]],
+  ["Добавить в группу из карточки", [
+    ["Выбрать готовую группу", "Есть «Аналитики», «Семья», «Теннис», Анна в «Теннис»: «+ группа» → «Семья»", "в окошке были «Аналитики» и «Семья»; окошко закрылось, метки «Семья», «Теннис»", "new", "auto"],
+    ["Создать новую группу", "В окошке впишите «Йога» → «Создать»", "у человека метка «Йога», на «Группы» «Йога — 1 контакт»", "new", "auto"],
+    ["Вписано название существующей группы", "Человека нет в «Семья» — впишите «семья» → «Создать»", "человек в «Семья», новой группы нет", "new", "auto"],
+    ["Человек уже в этой группе", "Человек в «Теннис» — впишите «теннис» → «Создать»", "окошко закрылось, метка «Теннис» одна, новой группы нет", "new", "auto"],
+    ["Ошибка в названии", "В окошке нажмите «Создать» с пустым полем", "окошко открыто, «Укажите название группы»", "new", "auto"],
+    ["Выбирать не из чего", "Когда групп нет или человек во всех — «+ группа»", "в окошке только поле «Новая группа» и «Создать»", "new", "auto"],
+    ["Закрыть без изменений", "Откройте окошко, нажмите Escape; ещё раз — нажмите мимо окошка", "окошко закрылось, группы прежние", "new", "hand"],
+    ["Окошко на телефоне", "На ширине 375 нажмите «+ группа»", "окошко целиком на экране", "new", "hand"],
+  ]],
+  ["Убрать из группы в карточке", [
+    ["Убрать из группы", "У Анны «Семья» и «Теннис» — крестик у «Теннис»", "осталась «Семья»; на «Группы» у «Теннис» на один меньше", "new", "auto"],
+    ["Ушёл последний человек", "В «Йога» один человек — уберите его крестиком", "«Йога — пока никого» осталась на «Группы»", "new", "auto"],
+  ]],
+  ["Главная: выбор группы над списком", [
+    ["Ряд меток", "Есть «Аналитики», «Семья», «Теннис» — откройте главную", "под поиском «Все», «Аналитики», «Семья», «Теннис», выделена «Все»", "new", "hand"],
+    ["Выбор группы", "Нажмите «Теннис» (в ней 12)", "выделена «Теннис», 12 человек, новые сверху", "new", "auto"],
+    ["Снова все контакты", "При выбранной «Теннис» нажмите «Все»", "выделена «Все», первая страница всех", "new", "auto"],
+    ["Другая группа", "При выбранной «Теннис» нажмите «Семья»", "выделена только «Семья», в списке её люди", "new", "auto"],
+    ["Групп нет", "Откройте главную, когда групп нет", "ряда меток нет, главная как раньше", "new", "hand"],
+  ]],
+  ["Главная: ряд меток на телефоне", [
+    ["Много групп на телефоне", "На ширине 375, групп больше, чем влезает", "метки в одну строку, ряд листается вбок, страница по ширине экрана", "new", "hand"],
+  ]],
+  ["Главная: страницы внутри группы", [
+    ["Большая группа", "Выберите «Работа» (120 человек) и нажмите «2»", "2-я страница, выделены «Работа» и «2», «Показаны 51–100 из 120»", "new", "auto"],
+    ["Маленькая группа", "Выберите «Теннис» (12)", "все 12, переключателя страниц нет", "new", "auto"],
+  ]],
+  ["Главная: пустая группа", [
+    ["Выбрана пустая группа", "Выберите «Аналитики», где никого", "«В группе «Аналитики» пока никого», пояснение, кнопка «Показать все контакты»", "new", "hand"],
+    ["Кнопка «Показать все контакты»", "Нажмите её", "выделена «Все», первая страница всех", "new", "hand"],
+  ]],
+  ["Главная: поиск в группе ничего не нашёл", [
+    ["Ничего не нашлось в группе", "Выберите «Теннис», введите «анна» (Анны там нет)", "«Никого не нашлось» и «По запросу «анна» в группе «Теннис» никого нет…»", "new", "auto"],
+    ["Кнопка «Показать всех в группе»", "Нажмите её", "поиск пуст, та же группа, первая страница её людей", "new", "auto"],
+  ]],
+  ["Главная: ссылка на группу, которой нет", [
+    ["Группу удалили", "Сохраните адрес с группой, удалите группу, откройте адрес", "все контакты, выделена «Все»", "new", "auto"],
+    ["Не группа", "В адресе замените номер группы на буквы: <code>/?group=abc</code>", "все контакты, выделена «Все»", "new", "auto"],
+  ]],
+  ["Главная: группы в строке списка", [
+    ["Человек в группах", "У Анны «Семья», «Теннис», в «Кто это» — «сестра»", "в строке под именем метки «Семья», «Теннис», затем «сестра»", "new", "auto"],
+    ["Человек без групп", "Найдите человека без групп", "строка как раньше", "new", "auto"],
+    ["Много групп на телефоне", "Человек в 5 группах, ширина 375", "строка той же высоты, за экран не вылезает, конец обрезан", "new", "hand"],
+  ]],
+  ["Главная: подпись над списком", [
+    ["Несколько страниц без поиска", "998 контактов, 2-я страница", "«Показаны 51–100 из 998»", "old", "auto"],
+    ["Последняя страница без поиска", "998 контактов, 20-я страница", "«Показаны 951–998 из 998»", "old", "auto"],
+    ["Несколько страниц с поиском", "Нашлось 120 из 998, 2-я страница найденных", "«Найдено: 120 из 998 · показаны 51–100»", "old", "auto"],
+    ["Одна страница", "12 контактов", "«Всего: 12 контактов»", "old", "auto"],
+    ["Одна страница с поиском", "Нашлось 7 из 998", "«Найдено: 7 из 998»", "old", "auto"],
+    ["Группа на одной странице", "Выберите «Теннис» (12)", "«В группе: 12 контактов»", "new", "auto"],
+    ["Группа на нескольких страницах", "«Работа» (120), 2-я страница", "«Показаны 51–100 из 120»", "new", "auto"],
+    ["Поиск в группе", "«Теннис» (12), поиск нашёл 3", "«Найдено: 3 из 12»", "new", "auto"],
+  ]],
+  ["Главная: номер страницы в адресе", [
+    ["Тот же адрес в другом браузере", "На 3-й странице скопируйте адрес, откройте в другом браузере", "та же 3-я страница", "old", "auto"],
+    ["Кнопка «Назад» в браузере", "Со 2-й страницы перейдите на 3-ю, нажмите «Назад» в браузере", "снова 2-я", "old", "hand"],
+    ["Адрес с группой в другом браузере", "«Работа», 2-я страница — скопируйте адрес, откройте в другом браузере", "выделена «Работа», 2-я страница, те же люди", "new", "auto"],
+  ]],
+  ["Главная: поиск по страницам", [
+    ["Поиск с дальней страницы", "На 5-й странице введите имя человека с 15-й", "он найден, открыта первая страница найденных", "old", "auto"],
+    ["Найденные по страницам", "Нашлось больше 50 — перейдите на 2-ю страницу", "тот же текст поиска, следующие найденные, выделена «2»", "old", "auto"],
+    ["Очистка поиска", "На 2-й странице найденных нажмите крестик в поиске", "первая страница всех контактов", "old", "auto"],
+    ["Поиск внутри группы", "Выберите «Теннис», введите «анна»", "выделена «Теннис», найдены только люди из «Теннис»", "new", "auto"],
+    ["Очистка поиска в группе", "«Теннис», в поиске «анна» — нажмите крестик", "выделена «Теннис», первая страница всех её людей", "new", "auto"],
+    ["Смена группы при поиске", "В поиске «анна» — выберите «Семья»", "в поиске «анна», найдены только из «Семья», первая страница", "new", "auto"],
+  ]],
+  ["«Все контакты» возвращает на то же место списка", [
+    ["Из карточки на ту же страницу", "С 5-й страницы откройте контакт, «Все контакты»", "5-я страница", "old", "hand"],
+    ["Из карточки обратно в поиск", "Поиск «анна», 2-я страница, контакт, «Все контакты»", "в поиске «анна», 2-я страница найденных", "old", "hand"],
+    ["Из карточки обратно в группу", "«Работа», 2-я страница, контакт, «Все контакты»", "выделена «Работа», 2-я страница группы", "new", "hand"],
+    ["После правки и заметки", "С 5-й страницы: контакт → «Редактировать» → сохранить → заметка → «Все контакты»", "5-я страница", "old", "hand"],
+    ["С «Пора связаться» и «Добавить контакт»", "С 5-й страницы перейдите туда, нажмите «Все контакты»", "5-я страница", "old", "hand"],
+    ["Со страницы «Группы»", "С 5-й страницы откройте «Группы», нажмите «Все контакты»", "5-я страница", "new", "hand"],
+    ["Карточка по прямой ссылке", "Откройте ссылку на карточку в новом окне, «Все контакты»", "первая страница без поиска", "old", "hand"],
+    ["Название приложения в шапке", "С 5-й страницы откройте контакт, нажмите «Личная CRM»", "первая страница без поиска", "old", "hand"],
+    ["Название приложения в шапке из группы", "Выберите «Теннис», откройте контакт, нажмите «Личная CRM»", "первая страница всех, без поиска, выделена «Все»", "new", "hand"],
+    ["Удаление контакта", "С 5-й страницы откройте контакт и удалите его", "первая страница, контакта нет", "old", "hand"],
+  ]],
+  ["Страница «Пора связаться»", [
+    ["Что видно о человеке", "Частота «Раз в неделю», последняя заметка 23 дня назад", "имя, «Раз в неделю», дата последней заметки, «просрочено на 16 дней»", "old", "auto"],
+    ["Человек без заметок", "Заметок нет, срок от дня, когда задали частоту, наступил", "вместо даты «заметок ещё нет»", "old", "auto"],
+    ["Группы человека", "Борис в «Теннис» и «Аналитики», срок наступил", "после частоты и даты метки «Аналитики», «Теннис»", "new", "auto"],
+    ["Человек без групп", "Человек без групп, срок наступил", "строка как раньше", "new", "auto"],
+    ["Переход в карточку", "Нажмите на человека", "открылась его карточка", "old", "hand"],
+    ["Те же данные в другом браузере", "Откройте «Пора связаться» в другом браузере", "те же люди с теми же сроками", "old", "auto"],
+  ]],
+];
+
+const tags = {
+  new: '<span class="tag new">новое</span>',
+  old: '<span class="tag old">как было</span>',
+  auto: '<span class="tag auto">будет автотест</span>',
+  hand: '<span class="tag hand">руками до e2e</span>',
+};
+let total = 0;
+const html = groups.map(([title, items]) => {
+  total += items.length;
+  const rows = items.map(([name, todo, result, kind, check]) =>
+    `<label class="check"><input type="checkbox"><div><div class="sc">${name}${tags[kind]}${tags[check]}</div>` +
+    `<div class="st">${todo} <span class="arrow-t">→</span> ${result}</div></div></label>`).join("");
+  return `<div class="check-group"><h3>${title}<span class="cap">${items.length}</span></h3>${rows}</div>`;
+}).join("");
+document.getElementById("checklist").innerHTML = html;
+// The page claims 85 scenarios; say so loudly if the list ever drifts from that.
+if (total !== 85) console.warn(`Checklist has ${total} scenarios, expected 85`);
+</script>
+</body>
+</html>

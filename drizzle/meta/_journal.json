@@ -15,6 +15,13 @@
       "when": 1793256340611,
       "tag": "0001_keep_in_touch",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793904633678,
+      "tag": "0002_groups",
+      "breakpoints": true
     }
   ]
 }

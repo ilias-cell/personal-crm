@@ -15,15 +15,18 @@ export function ContactListPagination({
   page,
   pageCount,
   search,
+  group = null,
   className,
 }: {
   page: number;
   pageCount: number;
   search: string;
+  // The chosen group stays when the page changes.
+  group?: number | null;
   className?: string;
 }) {
   if (pageCount <= 1) return null;
-  const href = (target: number) => contactListHref({ search, page: target });
+  const href = (target: number) => contactListHref({ search, group, page: target });
 
   return (
     <Pagination aria-label="Страницы списка" className={className}>

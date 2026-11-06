@@ -8,6 +8,7 @@ import {
   PHONE_MAX_LENGTH,
   TEXT_MAX_LENGTH,
 } from "@/lib/contact-form";
+import { GROUP_NAME_MAX_LENGTH } from "@/lib/group-form";
 
 // Empty optional fields are stored as NULL, not as empty strings.
 function optionalText(maxLength: number, tooLongMessage: string) {
@@ -51,3 +52,14 @@ export const noteSchema = z.object({
     .min(1, "Напишите текст заметки")
     .max(NOTE_MAX_LENGTH, `Заметка должна быть не длиннее ${NOTE_MAX_LENGTH} символов`),
 });
+
+export const groupNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Укажите название группы")
+  .max(GROUP_NAME_MAX_LENGTH, `Название — не длиннее ${GROUP_NAME_MAX_LENGTH} символов`);
+
+// Server actions are reachable by direct requests, so ids are checked even though the UI always sends a valid one.
+export function isValidId(id: unknown): id is number {
+  return typeof id === "number" && Number.isInteger(id) && id > 0;
+}
