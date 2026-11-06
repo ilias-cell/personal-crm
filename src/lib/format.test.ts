@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { formatContactListSummary, formatGroupSize } from "@/lib/format";
+import {
+  formatContactListSummary,
+  formatGroupSize,
+  formatOverdue,
+  formatOwnerDate,
+} from "@/lib/format";
 
 describe("formatGroupSize", () => {
   it.each([
@@ -74,5 +79,24 @@ describe("formatContactListSummary", () => {
     expect(
       formatContactListSummary({ totalCount: 12, foundCount: 3, first: 1, last: 3, inGroup: true }),
     ).toBe("Найдено: 3 из 12");
+  });
+});
+
+describe("formatOverdue", () => {
+  it.each([
+    [0, "пора сегодня"],
+    [1, "просрочено на 1 день"],
+    [3, "просрочено на 3 дня"],
+    [16, "просрочено на 16 дней"],
+    [21, "просрочено на 21 день"],
+  ])("writes %i days as «%s»", (days, expected) => {
+    expect(formatOverdue(days)).toBe(expected);
+  });
+});
+
+describe("formatOwnerDate", () => {
+  it("writes the day of a note in Moscow time", () => {
+    expect(formatOwnerDate(new Date("2026-10-01T23:30:00+03:00"))).toBe("1 октября 2026 г.");
+    expect(formatOwnerDate(new Date("2026-10-02T00:30:00+03:00"))).toBe("2 октября 2026 г.");
   });
 });

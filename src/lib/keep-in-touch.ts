@@ -34,41 +34,50 @@ end`;
 // The period runs from the last note or from touch_restarted_at, whichever is later (greatest() skips NULLs).
 const startDay = sql`(greatest(${lastNoteAt}, ${contacts.touchRestartedAt}) at time zone ${timeZone})::date`;
 const dueDay = sql`(${startDay} + ${period})::date`;
-const today = sql`(now() at time zone ${timeZone})::date`;
 
-// Every contact with a frequency, with how many days past its due day it is (negative: not due yet).
-const trackedContacts = db
-  .select({
-    id: contacts.id,
-    name: contacts.name,
-    touchFrequency: sql<TouchFrequency>`${contacts.touchFrequency}`.as("touch_frequency"),
-    // Wrapped once more on purpose: in a one-table select Drizzle drops table names from the columns at the top
-    // level of a field, and the bare "id" inside the subquery would then mean notes.id.
-    // mapWith turns the database text into a Date, as it does for the notes.created_at column itself.
-    lastNoteAt: sql<Date | null>`${lastNoteAt}`.mapWith(notes.createdAt).as("last_note_at"),
-    overdueDays: sql<number>`${today} - ${dueDay}`.mapWith(Number).as("overdue_days"),
-  })
-  .from(contacts)
-  .where(isNotNull(contacts.touchFrequency))
-  .as("tracked_contacts");
+// Counted as of this moment: now by the database clock, or a given moment (tests set "today" this way).
+export type OverdueOptions = { asOf?: Date };
+
+function trackedContacts({ asOf }: OverdueOptions) {
+  const moment = asOf ? sql`${asOf.toISOString()}::timestamptz` : sql`now()`;
+  const today = sql`(${moment} at time zone ${timeZone})::date`;
+
+  // Every contact with a frequency, with how many days past its due day it is (negative: not due yet).
+  return db
+    .select({
+      id: contacts.id,
+      name: contacts.name,
+      touchFrequency: sql<TouchFrequency>`${contacts.touchFrequency}`.as("touch_frequency"),
+      // Wrapped once more on purpose: in a one-table select Drizzle drops table names from the columns at the top
+      // level of a field, and the bare "id" inside the subquery would then mean notes.id.
+      // mapWith turns the database text into a Date, as it does for the notes.created_at column itself.
+      lastNoteAt: sql<Date | null>`${lastNoteAt}`.mapWith(notes.createdAt).as("last_note_at"),
+      overdueDays: sql<number>`${today} - ${dueDay}`.mapWith(Number).as("overdue_days"),
+    })
+    .from(contacts)
+    .where(isNotNull(contacts.touchFrequency))
+    .as("tracked_contacts");
+}
 
 // The person's period ended today or earlier. The longest overdue go first, equal ones by name.
-export async function listOverdueContacts(): Promise<OverdueContact[]> {
+export async function listOverdueContacts(options: OverdueOptions = {}): Promise<OverdueContact[]> {
+  const tracked = trackedContacts(options);
   const people = await db
     .select()
-    .from(trackedContacts)
-    .where(gte(trackedContacts.overdueDays, 0))
-    .orderBy(desc(trackedContacts.overdueDays), asc(trackedContacts.name), asc(trackedContacts.id));
+    .from(tracked)
+    .where(gte(tracked.overdueDays, 0))
+    .orderBy(desc(tracked.overdueDays), asc(tracked.name), asc(tracked.id));
 
   const groupsByContact = await listGroupsOfContacts(people.map((person) => person.id));
   return people.map((person) => ({ ...person, groups: groupsByContact.get(person.id) ?? [] }));
 }
 
-export async function countOverdueContacts(): Promise<number> {
+export async function countOverdueContacts(options: OverdueOptions = {}): Promise<number> {
+  const tracked = trackedContacts(options);
   const [row] = await db
     .select({ value: count() })
-    .from(trackedContacts)
-    .where(gte(trackedContacts.overdueDays, 0));
+    .from(tracked)
+    .where(gte(tracked.overdueDays, 0));
   return row.value;
 }
 
