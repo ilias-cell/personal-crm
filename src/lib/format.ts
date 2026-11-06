@@ -48,7 +48,12 @@ type ContactListSummary = {
 
 // "Всего: 12 контактов", "Найдено: 7 из 998". When the list does not fit on one page,
 // also which contacts are on the screen: "Показаны 51–100 из 998", "Найдено: 120 из 998 · показаны 51–100".
-export function formatContactListSummary({ totalCount, foundCount, first, last }: ContactListSummary): string {
+export function formatContactListSummary({
+  totalCount,
+  foundCount,
+  first,
+  last,
+}: ContactListSummary): string {
   const onePage = first === 1 && last === (foundCount ?? totalCount);
   const shown = `${numberFormat.format(first)}–${numberFormat.format(last)}`;
 
