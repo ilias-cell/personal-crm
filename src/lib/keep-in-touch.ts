@@ -59,12 +59,18 @@ export async function listOverdueContacts(): Promise<OverdueContact[]> {
 }
 
 export async function countOverdueContacts(): Promise<number> {
-  const [row] = await db.select({ value: count() }).from(trackedContacts).where(gte(trackedContacts.overdueDays, 0));
+  const [row] = await db
+    .select({ value: count() })
+    .from(trackedContacts)
+    .where(gte(trackedContacts.overdueDays, 0));
   return row.value;
 }
 
 // Tells the two empty states of "Пора связаться" apart: nobody is overdue, or nobody has a frequency at all.
 export async function hasAnyTouchFrequency(): Promise<boolean> {
-  const [row] = await db.select({ value: count() }).from(contacts).where(isNotNull(contacts.touchFrequency));
+  const [row] = await db
+    .select({ value: count() })
+    .from(contacts)
+    .where(isNotNull(contacts.touchFrequency));
   return row.value > 0;
 }

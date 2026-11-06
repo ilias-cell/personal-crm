@@ -37,7 +37,9 @@ export function DeleteContact({
   if (!isConfirming) {
     return (
       <div className="flex flex-col items-start gap-3">
-        <p className="text-sm text-muted-foreground">Контакт и все его заметки исчезнут навсегда.</p>
+        <p className="text-sm text-muted-foreground">
+          Контакт и все его заметки исчезнут навсегда.
+        </p>
         <Button
           ref={openButtonRef}
           type="button"
@@ -63,17 +65,27 @@ export function DeleteContact({
     >
       <p role="alert" className="break-words">
         Удалить контакт «{contactName}»?
-        {noteCount > 0 && ` Вместе с ним удалятся заметки: ${formatNumber(noteCount)}.`} Отменить это нельзя.
+        {noteCount > 0 && ` Вместе с ним удалятся заметки: ${formatNumber(noteCount)}.`} Отменить
+        это нельзя.
       </p>
 
       {state.error && (
-        <p role="alert" className="rounded-control bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p
+          role="alert"
+          className="rounded-control bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
           {state.error}
         </p>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="submit" variant="destructive" size="lg" className="h-10 px-4" disabled={isPending}>
+        <Button
+          type="submit"
+          variant="destructive"
+          size="lg"
+          className="h-10 px-4"
+          disabled={isPending}
+        >
           {isPending ? "Удаляю…" : "Да, удалить"}
         </Button>
         <Button

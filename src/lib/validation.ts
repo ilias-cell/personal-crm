@@ -26,7 +26,10 @@ export const contactSchema = z.object({
     .max(NAME_MAX_LENGTH, `Имя должно быть не длиннее ${NAME_MAX_LENGTH} символов`),
   about: optionalText(TEXT_MAX_LENGTH, `Не длиннее ${TEXT_MAX_LENGTH} символов`),
   howMet: optionalText(TEXT_MAX_LENGTH, `Не длиннее ${TEXT_MAX_LENGTH} символов`),
-  phone: optionalText(PHONE_MAX_LENGTH, `Телефон должен быть не длиннее ${PHONE_MAX_LENGTH} символов`),
+  phone: optionalText(
+    PHONE_MAX_LENGTH,
+    `Телефон должен быть не длиннее ${PHONE_MAX_LENGTH} символов`,
+  ),
   email: z
     .string()
     .trim()

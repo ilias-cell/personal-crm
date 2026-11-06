@@ -6,7 +6,16 @@ import "server-only";
 // the query text, where values are $1, $2 placeholders, and the error codes.
 
 // Fields PostgreSQL fills from the schema and its own code, never from the data.
-const SERVER_ERROR_FIELDS = ["code", "severity", "schema", "table", "column", "dataType", "constraint", "routine"];
+const SERVER_ERROR_FIELDS = [
+  "code",
+  "severity",
+  "schema",
+  "table",
+  "column",
+  "dataType",
+  "constraint",
+  "routine",
+];
 
 export function describeDbError(error: unknown): Record<string, unknown> {
   if (isQueryError(error)) {
@@ -25,14 +34,20 @@ function isQueryError(error: unknown): error is { query: string; cause: unknown 
   );
 }
 
-function describeCause(error: unknown, { driverMessage }: { driverMessage: boolean }): Record<string, unknown> {
+function describeCause(
+  error: unknown,
+  { driverMessage }: { driverMessage: boolean },
+): Record<string, unknown> {
   if (typeof error !== "object" || error === null) return { type: typeof error };
   const fields = error as Record<string, unknown>;
 
   // Reported by PostgreSQL itself (it always sets a severity): its message may quote a value, so codes and names only.
   if (typeof fields.severity === "string") {
     return Object.fromEntries(
-      SERVER_ERROR_FIELDS.filter((key) => fields[key] !== undefined).map((key) => [key, fields[key]]),
+      SERVER_ERROR_FIELDS.filter((key) => fields[key] !== undefined).map((key) => [
+        key,
+        fields[key],
+      ]),
     );
   }
   // What failed under a query, the parameters already set aside: a connection or driver error

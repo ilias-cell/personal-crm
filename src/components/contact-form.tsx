@@ -150,11 +150,17 @@ function ContactFormFields({
             </Field>
           );
         })}
-        <TouchFrequencyField value={values.touchFrequency} error={state.fieldErrors.touchFrequency} />
+        <TouchFrequencyField
+          value={values.touchFrequency}
+          error={state.fieldErrors.touchFrequency}
+        />
       </FieldGroup>
 
       {state.formError && (
-        <p role="alert" className="rounded-control bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p
+          role="alert"
+          className="rounded-control bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
           {state.formError}
         </p>
       )}
@@ -163,7 +169,10 @@ function ContactFormFields({
         <Button type="submit" size="lg" className="h-10 px-4" disabled={isPending}>
           {isPending ? pendingLabel : submitLabel}
         </Button>
-        <Link href={cancelHref} className={buttonVariants({ variant: "ghost", size: "lg", className: "h-10 px-4" })}>
+        <Link
+          href={cancelHref}
+          className={buttonVariants({ variant: "ghost", size: "lg", className: "h-10 px-4" })}
+        >
           Отмена
         </Link>
       </div>

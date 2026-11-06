@@ -84,7 +84,10 @@ export const getContact = cache(async (id: number): Promise<Contact | null> => {
 });
 
 export async function countNotes(contactId: number): Promise<number> {
-  const [row] = await db.select({ value: count() }).from(notes).where(eq(notes.contactId, contactId));
+  const [row] = await db
+    .select({ value: count() })
+    .from(notes)
+    .where(eq(notes.contactId, contactId));
   return row.value;
 }
 

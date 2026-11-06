@@ -26,7 +26,9 @@ export default function ContactsPage({ searchParams }: PageProps<"/">) {
   return (
     <main className="group/contacts flex flex-col gap-4">
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b-2 border-ink pb-3">
-        <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">Контакты</h1>
+        <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">
+          Контакты
+        </h1>
         <div className="flex flex-wrap items-center gap-x-6">
           <Link
             href="/keep-in-touch"
@@ -96,10 +98,15 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
             <UsersIcon />
           </EmptyMedia>
           <EmptyTitle>Пока нет ни одного контакта</EmptyTitle>
-          <EmptyDescription>Добавьте первого человека, чтобы не потерять его из виду.</EmptyDescription>
+          <EmptyDescription>
+            Добавьте первого человека, чтобы не потерять его из виду.
+          </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Link href="/contacts/new" className={buttonVariants({ size: "lg", className: "h-10 px-4" })}>
+          <Link
+            href="/contacts/new"
+            className={buttonVariants({ size: "lg", className: "h-10 px-4" })}
+          >
             <PlusIcon data-icon="inline-start" />
             Добавить контакт
           </Link>
@@ -121,7 +128,10 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Link href="/" className={buttonVariants({ variant: "outline", size: "lg", className: "h-10 px-4" })}>
+          <Link
+            href="/"
+            className={buttonVariants({ variant: "outline", size: "lg", className: "h-10 px-4" })}
+          >
             Показать все контакты
           </Link>
         </EmptyContent>
@@ -140,9 +150,19 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
       {/* On a phone the switcher goes under the summary; from sm they share one line, the switcher on the right. */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-13 text-subtle" aria-live="polite">
-          {formatContactListSummary({ totalCount, foundCount, first, last: first + contacts.length - 1 })}
+          {formatContactListSummary({
+            totalCount,
+            foundCount,
+            first,
+            last: first + contacts.length - 1,
+          })}
         </p>
-        <ContactListPagination page={page} pageCount={pageCount} search={search} className="sm:mx-0 sm:w-auto" />
+        <ContactListPagination
+          page={page}
+          pageCount={pageCount}
+          search={search}
+          className="sm:mx-0 sm:w-auto"
+        />
       </div>
       <ul className="divide-y divide-line-soft overflow-hidden rounded-card border bg-card lg:shadow-card">
         {contacts.map((contact) => (
@@ -152,7 +172,12 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
         ))}
       </ul>
       {/* Right-aligned from sm, under the switcher above the list. */}
-      <ContactListPagination page={page} pageCount={pageCount} search={search} className="sm:justify-end" />
+      <ContactListPagination
+        page={page}
+        pageCount={pageCount}
+        search={search}
+        className="sm:justify-end"
+      />
     </section>
   );
 }

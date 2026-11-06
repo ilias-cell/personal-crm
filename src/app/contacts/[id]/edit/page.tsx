@@ -38,7 +38,9 @@ async function EditContact({ params }: { params: Params }) {
   return (
     <>
       <BackLink href={cardHref}>{contact.name}</BackLink>
-      <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">Редактирование контакта</h1>
+      <h1 className="font-serif text-32 font-normal tracking-[-0.015em] lg:text-4xl lg:leading-[1.12]">
+        Редактирование контакта
+      </h1>
       <ContactForm
         // A saved change gives the form a new key, so it never shows values from before the save.
         key={contact.updatedAt.toISOString()}
@@ -57,7 +59,10 @@ async function EditContact({ params }: { params: Params }) {
       />
 
       {/* Kept far from "Save" and in its own form, so it is never hit by accident. */}
-      <section className="flex flex-col gap-3 border-t border-line-soft pt-6" aria-labelledby="delete-heading">
+      <section
+        className="flex flex-col gap-3 border-t border-line-soft pt-6"
+        aria-labelledby="delete-heading"
+      >
         <h2 id="delete-heading" className="font-serif text-22 font-normal tracking-[-0.015em]">
           Удаление
         </h2>

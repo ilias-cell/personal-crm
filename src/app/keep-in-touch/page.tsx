@@ -19,7 +19,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { TOUCH_FREQUENCY_LABELS } from "@/lib/contact-form";
 import { formatOverdue, formatOwnerDate } from "@/lib/format";
-import { hasAnyTouchFrequency, listOverdueContacts, type OverdueContact } from "@/lib/keep-in-touch";
+import {
+  hasAnyTouchFrequency,
+  listOverdueContacts,
+  type OverdueContact,
+} from "@/lib/keep-in-touch";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -94,7 +98,10 @@ function OverdueRow({ person }: { person: OverdueContact }) {
           {TOUCH_FREQUENCY_LABELS[person.touchFrequency]} · {lastNote}
         </span>
       </span>
-      <ChevronRightIcon className="size-4 shrink-0 self-center text-placeholder" aria-hidden="true" />
+      <ChevronRightIcon
+        className="size-4 shrink-0 self-center text-placeholder"
+        aria-hidden="true"
+      />
     </Link>
   );
 }
@@ -107,7 +114,9 @@ function AllInTouch() {
           <CircleCheckIcon />
         </EmptyMedia>
         <EmptyTitle>Со всеми на связи</EmptyTitle>
-        <EmptyDescription>Ни у кого срок не прошёл. Когда кому-то пора будет написать, он появится здесь.</EmptyDescription>
+        <EmptyDescription>
+          Ни у кого срок не прошёл. Когда кому-то пора будет написать, он появится здесь.
+        </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <AllContactsButton />
@@ -125,8 +134,8 @@ function NoFrequencyYet() {
         </EmptyMedia>
         <EmptyTitle>Пока ни для кого не задано, как часто общаться</EmptyTitle>
         <EmptyDescription>
-          Откройте контакт, нажмите «Редактировать» и выберите в поле «Как часто общаться», например, «Раз в месяц».
-          Когда срок пройдёт, человек появится здесь.
+          Откройте контакт, нажмите «Редактировать» и выберите в поле «Как часто общаться»,
+          например, «Раз в месяц». Когда срок пройдёт, человек появится здесь.
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
@@ -138,7 +147,9 @@ function NoFrequencyYet() {
 
 function AllContactsButton() {
   return (
-    <ContactListLink className={buttonVariants({ variant: "outline", size: "lg", className: "h-10 px-4" })}>
+    <ContactListLink
+      className={buttonVariants({ variant: "outline", size: "lg", className: "h-10 px-4" })}
+    >
       Все контакты
     </ContactListLink>
   );
