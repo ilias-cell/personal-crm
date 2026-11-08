@@ -1,6 +1,6 @@
 name: Deploy
 
-# Push to main -> image tagged with the commit SHA in GHCR -> on the server: migrations, new image, smoke /health.
+# Push to main -> image tagged with the commit SHA in GHCR -> on the server: database backup, migrations, new image, smoke /health.
 # All server logic lives in deploy/; this file only builds the image and calls those scripts.
 on:
   push:
