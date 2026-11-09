@@ -19,7 +19,7 @@ if ! [[ $kind =~ ^[a-z][a-z-]*$ ]]; then
   fail "kind must be lowercase letters and dashes, e.g. deploy or manual; got: $kind"
 fi
 
-require_env
+require_env POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB
 
 version=$(current_version)
 # compose.yaml needs APP_IMAGE to be set even though the db service does not use it.

@@ -1,7 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { formatOwnerDate } from "../src/lib/format";
-import { insertContacts, insertContactWith, resetDatabase } from "./database";
+import { signIn, uniqueEmail } from "./auth";
+import { createUser, insertContacts, insertContactWith, resetDatabase } from "./database";
 
 // The main paths of "Пора связаться" from openspec/specs/keep-in-touch/spec.md.
 // Counting the period by the calendar is checked by the unit tests: a browser cannot move "today".
@@ -10,8 +11,14 @@ const HINT = "Когда срок пройдёт, человек появитс�
 const EXPLANATION =
   "С этими людьми вы не общались дольше, чем хотели. Сверху — у кого срок прошёл раньше всех.";
 
+// Every test logs in under an email of its own, and its data belongs to that user.
+let email: string;
+let ownerId: string;
+
 test.beforeEach(async () => {
   await resetDatabase();
+  email = uniqueEmail("owner");
+  ownerId = await createUser(email);
 });
 
 function keepInTouchLink(page: Page) {
@@ -52,7 +59,8 @@ async function editFrequency(page: Page, name: string, frequency: string) {
 
 test("set up how often to keep in touch, from an empty page to new contacts", async ({ page }) => {
   // A contact from before the feature: no frequency.
-  await insertContacts(["Анна Смирнова"]);
+  await insertContacts(ownerId, ["Анна Смирнова"]);
+  await signIn(page, email);
 
   // Nobody has a frequency: the link has no number, the page tells where to set it.
   await page.goto("/");
@@ -117,16 +125,17 @@ test("see whom to get in touch with, write a note, and the person leaves the pag
   page,
   browser,
 }) => {
-  const { noteAt } = await insertContactWith({
+  const { noteAt } = await insertContactWith(ownerId, {
     name: "Борис Петров",
     noteDaysAgo: 365,
     groups: ["Теннис", "Аналитики"],
   });
-  await insertContactWith({
+  await insertContactWith(ownerId, {
     name: "Вера Климова",
     touchFrequency: "week",
     touchRestartedDaysAgo: 10,
   });
+  await signIn(page, email);
 
   // A frequency for a person whose last note is a year old: overdue at once.
   await editFrequency(page, "Борис Петров", "Раз в месяц");
@@ -158,6 +167,7 @@ test("see whom to get in touch with, write a note, and the person leaves the pag
   const otherContext = await browser.newContext();
   try {
     const other = await otherContext.newPage();
+    await signIn(other, email);
     await other.goto("/keep-in-touch");
     await expect(overdueRows(other)).toHaveText(rows);
   } finally {

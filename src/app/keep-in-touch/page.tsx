@@ -25,6 +25,7 @@ import {
   listOverdueContacts,
   type OverdueContact,
 } from "@/lib/keep-in-touch";
+import { requireUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -50,10 +51,11 @@ export default function KeepInTouchPage() {
 async function OverdueList() {
   // Who is overdue depends on today's date, so the list is read on every visit, never at build time.
   await connection();
-  const people = await listOverdueContacts();
+  const user = await requireUser();
+  const people = await listOverdueContacts(user.id);
 
   if (people.length === 0) {
-    return (await hasAnyTouchFrequency()) ? <AllInTouch /> : <NoFrequencyYet />;
+    return (await hasAnyTouchFrequency(user.id)) ? <AllInTouch /> : <NoFrequencyYet />;
   }
 
   return (

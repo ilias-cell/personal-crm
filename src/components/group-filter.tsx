@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { LinkPending } from "@/components/link-pending";
 import { listGroups } from "@/lib/groups";
+import { requireUser } from "@/lib/session";
 import { contactListHref } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +18,8 @@ export async function GroupFilter({
   search: string;
   selectedGroupId: number | null;
 }) {
-  const groups = await listGroups();
+  const user = await requireUser();
+  const groups = await listGroups(user.id);
   if (groups.length === 0) return null;
 
   const items = [{ id: null, name: "Все" }, ...groups];

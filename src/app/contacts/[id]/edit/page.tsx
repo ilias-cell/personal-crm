@@ -8,6 +8,7 @@ import { ContactForm } from "@/components/contact-form";
 import { DeleteContact } from "@/components/delete-contact";
 import { Skeleton } from "@/components/ui/skeleton";
 import { countNotes, getContact, parseContactId } from "@/lib/contacts";
+import { requireUser } from "@/lib/session";
 
 type Params = PageProps<"/contacts/[id]/edit">["params"];
 
@@ -30,7 +31,11 @@ async function EditContact({ params }: { params: Params }) {
   const contactId = parseContactId(id);
   if (contactId === null) notFound();
 
-  const [contact, noteCount] = await Promise.all([getContact(contactId), countNotes(contactId)]);
+  const user = await requireUser();
+  const [contact, noteCount] = await Promise.all([
+    getContact(user.id, contactId),
+    countNotes(user.id, contactId),
+  ]);
   if (!contact) notFound();
 
   const cardHref = `/contacts/${contact.id}`;

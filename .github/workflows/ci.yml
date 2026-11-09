@@ -17,6 +17,12 @@ env:
   NODE_VERSION: 24
   # Throwaway database of this run only (the postgres service of each job); not a secret.
   DATABASE_URL: postgresql://crm:crm@127.0.0.1:5432/crm
+  # Mail catcher of this run only (the mailpit service of each job): login emails land there and tests read the links from it.
+  SMTP_URL: smtp://127.0.0.1:1025
+  # Test values for login, not secrets: they protect nothing outside this run.
+  BETTER_AUTH_SECRET: ci-only-test-secret-not-a-real-secret-0123456789
+  BETTER_AUTH_URL: http://127.0.0.1:3001
+  MAIL_FROM: Личная CRM <noreply@example.com>
 
 jobs:
   checks:
@@ -33,6 +39,16 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd "pg_isready -U crm -d crm"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mailpit:
+        image: axllent/mailpit:v1.33.1
+        ports:
+          - 1025:1025
+          - 8025:8025
+        options: >-
+          --health-cmd "/mailpit readyz"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -75,6 +91,16 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd "pg_isready -U crm -d crm"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mailpit:
+        image: axllent/mailpit:v1.33.1
+        ports:
+          - 1025:1025
+          - 8025:8025
+        options: >-
+          --health-cmd "/mailpit readyz"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10

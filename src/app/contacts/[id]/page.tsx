@@ -15,13 +15,16 @@ import { TOUCH_FREQUENCY_LABELS } from "@/lib/contact-form";
 import { getContact, listNotes, parseContactId } from "@/lib/contacts";
 import { formatDate, formatDateTime, formatNoteCount } from "@/lib/format";
 import { listContactGroups, listGroups } from "@/lib/groups";
+import { getCurrentUser, requireUser } from "@/lib/session";
 
 type Params = PageProps<"/contacts/[id]">["params"];
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { id } = await params;
   const contactId = parseContactId(id);
-  const contact = contactId === null ? null : await getContact(contactId);
+  // Without a login (an old cookie) there is no contact to name: the page itself sends the person to the login page.
+  const user = await getCurrentUser();
+  const contact = contactId === null || !user ? null : await getContact(user.id, contactId);
   return { title: contact?.name ?? "Контакт не найден" };
 }
 
@@ -41,11 +44,12 @@ async function ContactCard({ params }: { params: Params }) {
   const contactId = parseContactId(id);
   if (contactId === null) notFound();
 
+  const user = await requireUser();
   const [contact, notes, memberGroups, allGroups] = await Promise.all([
-    getContact(contactId),
-    listNotes(contactId),
-    listContactGroups(contactId),
-    listGroups(),
+    getContact(user.id, contactId),
+    listNotes(user.id, contactId),
+    listContactGroups(user.id, contactId),
+    listGroups(user.id),
   ]);
   if (!contact) notFound();
   const memberIds = new Set(memberGroups.map((group) => group.id));

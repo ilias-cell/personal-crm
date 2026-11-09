@@ -1,6 +1,6 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { Client, Pool } from "pg";
+import { Client } from "pg";
+
+import { runMigrations } from "../db/run-migrations";
 
 // Test databases live next to the working one, named "<name><suffix>", so working data is never touched.
 // Vitest uses "_test", Playwright uses "_e2e": they can run at the same time without clearing each other's data.
@@ -65,16 +65,40 @@ async function createDatabaseIfMissing(name: string) {
   }
 }
 
+// Drops the database if it exists and creates it again, empty. Only for databases whose name ends with _test:
+// the check is the last line of defence against dropping working data.
+export async function recreateDatabase(name: string): Promise<void> {
+  if (!name.endsWith("_test")) {
+    throw new Error(
+      `Refusing to drop database "${name}": the name of a test database must end with _test.`,
+    );
+  }
+  const serverUrl = loadDatabaseUrl();
+  serverUrl.pathname = "/postgres";
+  const client = new Client({
+    connectionString: serverUrl.toString(),
+    connectionTimeoutMillis: 5000,
+  });
+  await client.connect();
+  try {
+    await client.query(`drop database if exists ${quoteIdentifier(name)} with (force)`);
+    await client.query(`create database ${quoteIdentifier(name)}`);
+  } finally {
+    await client.end();
+  }
+}
+
 // Makes sure the test database exists and has the current schema. Returns its connection string.
 export async function prepareTestDatabase(suffix: TestDatabaseSuffix): Promise<URL> {
   const testUrl = testDatabaseUrl(suffix);
   await createDatabaseIfMissing(databaseName(testUrl));
 
-  const pool = new Pool({ connectionString: testUrl.toString(), max: 1 });
-  try {
-    await migrate(drizzle(pool), { migrationsFolder: "drizzle" });
-  } finally {
-    await pool.end();
-  }
+  // A test database may still hold rows from before login existed (every test empties it, but a database that was
+  // not used since then keeps its last rows). They are test data: the login migration gives them to a throwaway owner.
+  await runMigrations({
+    connectionString: testUrl.toString(),
+    migrationsFolder: "drizzle",
+    ownerEmail: "owner-of-old-test-data@example.com",
+  });
   return testUrl;
 }

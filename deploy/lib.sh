@@ -12,11 +12,27 @@ fail() {
   exit 1
 }
 
+# Settings the app and its migrations need. Without OWNER_EMAIL the login migration cannot give the existing
+# contacts to anyone; the rest is needed for people to log in.
+all_env_keys="POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB OWNER_EMAIL BETTER_AUTH_SECRET BETTER_AUTH_URL SMTP_URL MAIL_FROM"
+
+# require_env [KEY...]: the file exists and every key (all of them by default) has a value in it.
+# Only names are ever printed, never values.
 require_env() {
   if [ ! -f .env ]; then
-    fail "$PWD/.env is missing. It holds the database settings and is created by hand once (see README)."
+    fail "$PWD/.env is missing. It holds the settings and is created by hand once (see README)."
   fi
   chmod 600 .env
+
+  local key missing=""
+  for key in ${*:-$all_env_keys}; do
+    if ! grep -Eq "^${key}=[^[:space:]]" .env; then
+      missing="$missing $key"
+    fi
+  done
+  if [ -n "$missing" ]; then
+    fail "$PWD/.env has no value for:$missing. Add the lines as described in the README (section \"Выкатка на сервер\"); nothing was done."
+  fi
 }
 
 # deploy.sh and restore.sh must never run at the same time: both stop, change or replace the database and the app.

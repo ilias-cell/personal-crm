@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, sql, type SQL } from "drizzle-orm";
+import { and, eq, sql, type SQL } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ZodError } from "zod";
@@ -15,6 +15,7 @@ import type {
   DeleteContactState,
   NoteFormState,
 } from "@/lib/contact-form";
+import { requireUser } from "@/lib/session";
 import { contactSchema, isValidId, noteSchema } from "@/lib/validation";
 
 const SAVE_FAILED_MESSAGE =
@@ -23,6 +24,9 @@ const DELETE_FAILED_MESSAGE =
   "Не удалось удалить. Проверьте, что база данных запущена, и попробуйте ещё раз.";
 const CONTACT_NOT_FOUND_MESSAGE =
   "Этот контакт не найден. Вернитесь к списку и откройте его заново.";
+
+// Every action starts with requireUser(): an action is reachable by a direct request, not only through the page,
+// so it checks who is asking itself. A contact of someone else is answered like a contact that does not exist.
 
 function readText(formData: FormData, field: string): string {
   const value = formData.get(field);
@@ -68,6 +72,7 @@ export async function createContact(
   _previous: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
+  const user = await requireUser();
   const values = readContactForm(formData);
   const parsed = contactSchema.safeParse(values);
   if (!parsed.success) {
@@ -77,6 +82,7 @@ export async function createContact(
   try {
     await db.insert(contacts).values({
       ...parsed.data,
+      ownerId: user.id,
       // A new contact has no notes yet, so a chosen frequency starts its period today.
       touchRestartedAt: parsed.data.touchFrequency ? sql`now()` : null,
     });
@@ -94,6 +100,7 @@ export async function updateContact(
   _previous: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
+  const user = await requireUser();
   const values = readContactForm(formData);
   if (!isValidId(contactId)) {
     return { values, fieldErrors: {}, formError: CONTACT_NOT_FOUND_MESSAGE };
@@ -113,7 +120,7 @@ export async function updateContact(
         touchRestartedAt: touchRestartedAtOnSave(parsed.data.touchFrequency),
         updatedAt: new Date(),
       })
-      .where(eq(contacts.id, contactId))
+      .where(and(eq(contacts.id, contactId), eq(contacts.ownerId, user.id)))
       .returning({ id: contacts.id });
   } catch (error) {
     console.error("Failed to update contact", describeDbError(error));
@@ -129,6 +136,7 @@ export async function updateContact(
 
 // The contact's notes go with it: notes.contact_id is declared ON DELETE CASCADE.
 export async function deleteContact(contactId: number): Promise<DeleteContactState> {
+  const user = await requireUser();
   if (!isValidId(contactId)) {
     return { error: CONTACT_NOT_FOUND_MESSAGE };
   }
@@ -137,7 +145,7 @@ export async function deleteContact(contactId: number): Promise<DeleteContactSta
   try {
     deletedRows = await db
       .delete(contacts)
-      .where(eq(contacts.id, contactId))
+      .where(and(eq(contacts.id, contactId), eq(contacts.ownerId, user.id)))
       .returning({ id: contacts.id });
   } catch (error) {
     console.error("Failed to delete contact", describeDbError(error));
@@ -157,6 +165,7 @@ export async function addNote(
   _previous: NoteFormState,
   formData: FormData,
 ): Promise<NoteFormState> {
+  const user = await requireUser();
   const body = readText(formData, "body");
   if (!isValidId(contactId)) {
     return { body, error: CONTACT_NOT_FOUND_MESSAGE };
@@ -171,7 +180,7 @@ export async function addNote(
     const [contact] = await db
       .select({ id: contacts.id })
       .from(contacts)
-      .where(eq(contacts.id, contactId))
+      .where(and(eq(contacts.id, contactId), eq(contacts.ownerId, user.id)))
       .limit(1);
     if (!contact) {
       return { body, error: CONTACT_NOT_FOUND_MESSAGE };

@@ -31,7 +31,8 @@ function escapeLikePattern(value: string): string {
 // inside each group, and without a search, the newest contacts come first.
 // With a group, only its people are searched; the order stays the same.
 // The list and its count share this, so both always see the same contacts.
-function searchContacts(search: string, groupId: number | null) {
+// Only the contacts of the owner are ever looked at.
+function searchContacts(ownerId: string, search: string, groupId: number | null) {
   const terms = normalizeForSearch(search).split(/\s+/).filter(Boolean).map(escapeLikePattern);
   const normalizedName = sql`translate(lower(${contacts.name}), 'ё', 'е')`;
 
@@ -49,7 +50,7 @@ function searchContacts(search: string, groupId: number | null) {
       : sql`exists (select 1 from ${contactGroups} where ${contactGroups.contactId} = ${contacts.id} and ${contactGroups.groupId} = ${groupId})`;
 
   return {
-    where: and(...containsEveryTerm, inGroup),
+    where: and(eq(contacts.ownerId, ownerId), ...containsEveryTerm, inGroup),
     // The id makes the order unique, so pages never share or skip a contact.
     orderBy: [...relevance, desc(contacts.createdAt), desc(contacts.id)],
   };
@@ -57,11 +58,12 @@ function searchContacts(search: string, groupId: number | null) {
 
 // The search text is a query parameter: a failed query must not carry it into the server log.
 export async function listContacts(
+  ownerId: string,
   search: string,
   page: number,
   groupId: number | null = null,
 ): Promise<ContactListItem[]> {
-  const { where, orderBy } = searchContacts(search, groupId);
+  const { where, orderBy } = searchContacts(ownerId, search, groupId);
   const pageOfContacts = await withoutQueryData(
     db
       .select({
@@ -79,7 +81,10 @@ export async function listContacts(
       .offset((page - 1) * PAGE_SIZE),
   );
   // The groups of the whole page in one more query, not one per person.
-  const groupsByContact = await listGroupsOfContacts(pageOfContacts.map((contact) => contact.id));
+  const groupsByContact = await listGroupsOfContacts(
+    ownerId,
+    pageOfContacts.map((contact) => contact.id),
+  );
   return pageOfContacts.map((contact) => ({
     ...contact,
     groups: groupsByContact.get(contact.id) ?? [],
@@ -87,9 +92,16 @@ export async function listContacts(
 }
 
 // Without a search, all contacts; with a group, only its people.
-export async function countContacts(search = "", groupId: number | null = null): Promise<number> {
+export async function countContacts(
+  ownerId: string,
+  search = "",
+  groupId: number | null = null,
+): Promise<number> {
   const [row] = await withoutQueryData(
-    db.select({ value: count() }).from(contacts).where(searchContacts(search, groupId).where),
+    db
+      .select({ value: count() })
+      .from(contacts)
+      .where(searchContacts(ownerId, search, groupId).where),
   );
   return row.value;
 }
@@ -100,24 +112,33 @@ export function parseContactId(raw: string): number | null {
   return Number(raw);
 }
 
+// A contact of someone else gives null, the same as a contact that does not exist: nothing tells them apart.
 // Wrapped in React.cache: page metadata and page body share one query per request.
-export const getContact = cache(async (id: number): Promise<Contact | null> => {
-  const [contact] = await db.select().from(contacts).where(eq(contacts.id, id)).limit(1);
+export const getContact = cache(async (ownerId: string, id: number): Promise<Contact | null> => {
+  const [contact] = await db
+    .select()
+    .from(contacts)
+    .where(and(eq(contacts.id, id), eq(contacts.ownerId, ownerId)))
+    .limit(1);
   return contact ?? null;
 });
 
-export async function countNotes(contactId: number): Promise<number> {
+// Notes belong to the owner of their contact, so they are reached only through a contact of the owner.
+export async function countNotes(ownerId: string, contactId: number): Promise<number> {
   const [row] = await db
     .select({ value: count() })
     .from(notes)
-    .where(eq(notes.contactId, contactId));
+    .innerJoin(contacts, eq(contacts.id, notes.contactId))
+    .where(and(eq(notes.contactId, contactId), eq(contacts.ownerId, ownerId)));
   return row.value;
 }
 
-export async function listNotes(contactId: number): Promise<Note[]> {
-  return db
-    .select()
+export async function listNotes(ownerId: string, contactId: number): Promise<Note[]> {
+  const rows = await db
+    .select({ note: notes })
     .from(notes)
-    .where(eq(notes.contactId, contactId))
+    .innerJoin(contacts, eq(contacts.id, notes.contactId))
+    .where(and(eq(notes.contactId, contactId), eq(contacts.ownerId, ownerId)))
     .orderBy(desc(notes.createdAt), desc(notes.id));
+  return rows.map((row) => row.note);
 }
