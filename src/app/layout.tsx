@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Commissioner, Literata } from "next/font/google";
 import Link from "next/link";
+import { Suspense } from "react";
+
+import { UserMenu } from "@/components/user-menu";
 import "./globals.css";
 
 const commissioner = Commissioner({
@@ -35,10 +38,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full">
         <header className="border-b border-line-soft">
-          <div className="mx-auto flex h-15 w-full max-w-3xl items-center px-6 lg:h-18">
-            <Link href="/" className="font-serif text-lg font-medium lg:text-xl">
+          <div className="mx-auto flex h-15 w-full max-w-3xl items-center justify-between gap-3 px-6 lg:h-18">
+            <Link href="/" className="shrink-0 font-serif text-lg font-medium lg:text-xl">
               Личная CRM
             </Link>
+            {/* Reads the login, so it waits for the request; until then, and for someone not logged in, it is empty. */}
+            <Suspense fallback={null}>
+              <UserMenu />
+            </Suspense>
           </div>
         </header>
         <div className="mx-auto w-full max-w-3xl px-6 py-8 sm:py-12">{children}</div>

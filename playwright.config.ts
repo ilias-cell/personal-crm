@@ -39,6 +39,12 @@ export default defineConfig({
     stderr: "pipe",
     env: {
       DATABASE_URL: testDatabaseUrl("_e2e").toString(),
+      // Login settings for the tests. They are set, not defaulted, so a real .env of the owner can never leak into a test:
+      // the secret is a throwaway one, and emails always go to the local Mailpit, never to a real mailbox.
+      BETTER_AUTH_SECRET: "e2e-only-secret-not-a-real-secret-0123456789",
+      BETTER_AUTH_URL: BASE_URL,
+      SMTP_URL: "smtp://127.0.0.1:1025",
+      MAIL_FROM: "Личная CRM <noreply@mail.therooks.ru>",
       NEXT_TELEMETRY_DISABLED: "1",
       PORT: String(PORT),
       HOSTNAME: "127.0.0.1",

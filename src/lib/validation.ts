@@ -59,6 +59,18 @@ export const groupNameSchema = z
   .min(1, "Укажите название группы")
   .max(GROUP_NAME_MAX_LENGTH, `Название — не длиннее ${GROUP_NAME_MAX_LENGTH} символов`);
 
+// The email a person logs in with. Spaces around it are dropped and letters are lower-cased, so "Anna@Example.com "
+// and "anna@example.com" are one user. Every failure gives the same message, as the form shows just one.
+const LOGIN_EMAIL_MESSAGE = "Проверьте адрес почты";
+
+export const loginEmailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(1, LOGIN_EMAIL_MESSAGE)
+  .max(EMAIL_MAX_LENGTH, LOGIN_EMAIL_MESSAGE)
+  .pipe(z.email(LOGIN_EMAIL_MESSAGE));
+
 // Server actions are reachable by direct requests, so ids are checked even though the UI always sends a valid one.
 export function isValidId(id: unknown): id is number {
   return typeof id === "number" && Number.isInteger(id) && id > 0;

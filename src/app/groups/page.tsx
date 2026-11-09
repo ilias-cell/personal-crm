@@ -15,6 +15,7 @@ import {
 import { GroupRow } from "@/components/group-row";
 import { Skeleton } from "@/components/ui/skeleton";
 import { listGroupsWithCounts } from "@/lib/groups";
+import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Группы",
@@ -40,7 +41,8 @@ export default function GroupsPage() {
 async function GroupList() {
   // Groups change on every visit's request, so they are read then, never at build time.
   await connection();
-  const groups = await listGroupsWithCounts();
+  const user = await requireUser();
+  const groups = await listGroupsWithCounts(user.id);
 
   if (groups.length === 0) {
     return (

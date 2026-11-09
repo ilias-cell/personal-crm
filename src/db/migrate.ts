@@ -1,10 +1,9 @@
 // Applies pending database migrations from the "drizzle" folder: node tools/migrate.js
 // The deploy runs this in a one-off container from the app image before the new app container starts.
-// It writes to the same journal table as "pnpm db:migrate" (drizzle-kit), so both ways can be mixed.
+// "pnpm db:migrate" runs the same code, so both ways write to the same journal table.
+// OWNER_EMAIL is needed once, when the database already holds contacts from before login existed.
 
-import { drizzle } from "drizzle-orm/node-postgres";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { Pool } from "pg";
+import { runMigrations } from "./run-migrations";
 
 async function main() {
   const connectionString = process.env.DATABASE_URL;
@@ -12,13 +11,12 @@ async function main() {
     throw new Error("DATABASE_URL is not set.");
   }
 
-  const pool = new Pool({ connectionString, max: 1, connectionTimeoutMillis: 10000 });
-  try {
-    await migrate(drizzle(pool), { migrationsFolder: process.env.MIGRATIONS_DIR ?? "drizzle" });
-    console.log("Migrations applied.");
-  } finally {
-    await pool.end();
-  }
+  await runMigrations({
+    connectionString,
+    migrationsFolder: process.env.MIGRATIONS_DIR ?? "drizzle",
+    ownerEmail: process.env.OWNER_EMAIL,
+  });
+  console.log("Migrations applied.");
 }
 
 main().catch((error) => {

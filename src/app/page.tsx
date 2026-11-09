@@ -30,6 +30,7 @@ import { countContacts, listContacts, type ContactListItem } from "@/lib/contact
 import { formatContactListSummary, formatNumber } from "@/lib/format";
 import { countOverdueContacts } from "@/lib/keep-in-touch";
 import { getGroup } from "@/lib/groups";
+import { requireUser } from "@/lib/session";
 import { contactListHref, PAGE_SIZE, parseGroupId, parsePage } from "@/lib/pagination";
 
 export default function ContactsPage({ searchParams }: PageProps<"/">) {
@@ -98,7 +99,8 @@ export default function ContactsPage({ searchParams }: PageProps<"/">) {
 async function OverdueCount() {
   // Who is overdue depends on today's date, so it is counted on every visit, never at build time.
   await connection();
-  const count = await countOverdueContacts();
+  const user = await requireUser();
+  const count = await countOverdueContacts(user.id);
   if (count === 0) return null;
   return <span className="font-semibold tabular-nums">· {formatNumber(count)}</span>;
 }
@@ -108,27 +110,30 @@ function readSearch(q: string | string[] | undefined): string {
 }
 
 // The group of the address, or null: no group in it, something that is not a group, or a group that is gone
-// (deleted since the address was saved). In all of these the list shows everybody.
-async function readGroup(rawGroup: string | string[] | undefined) {
+// (deleted since the address was saved), or a group of another user, which looks the same as one that is gone.
+// In all of these the list shows everybody.
+async function readGroup(ownerId: string, rawGroup: string | string[] | undefined) {
   const groupId = parseGroupId(rawGroup);
-  return groupId === null ? null : await getGroup(groupId);
+  return groupId === null ? null : await getGroup(ownerId, groupId);
 }
 
 async function GroupFilterRow({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
   const { q, group: rawGroup } = await searchParams;
-  const group = await readGroup(rawGroup);
+  const user = await requireUser();
+  const group = await readGroup(user.id, rawGroup);
   return <GroupFilter search={readSearch(q)} selectedGroupId={group?.id ?? null} />;
 }
 
 async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
   const { q, group: rawGroup, page: rawPage } = await searchParams;
   const search = readSearch(q);
-  const group = await readGroup(rawGroup);
+  const user = await requireUser();
+  const group = await readGroup(user.id, rawGroup);
   const groupId = group?.id ?? null;
   // Inside a group, "total" means the people of the group.
   const [totalCount, foundCount] = await Promise.all([
-    countContacts("", groupId),
-    search ? countContacts(search, groupId) : null,
+    countContacts(user.id, "", groupId),
+    search ? countContacts(user.id, search, groupId) : null,
   ]);
   const listCount = foundCount ?? totalCount;
 
@@ -210,7 +215,7 @@ async function ContactList({ searchParams }: Pick<PageProps<"/">, "searchParams"
   const pageCount = Math.ceil(listCount / PAGE_SIZE);
   // A page past the end (contacts were deleted, or the address was typed by hand) shows the last one.
   const page = Math.min(parsePage(rawPage), pageCount);
-  const contacts = await listContacts(search, page, groupId);
+  const contacts = await listContacts(user.id, search, page, groupId);
   const first = (page - 1) * PAGE_SIZE + 1;
 
   return (

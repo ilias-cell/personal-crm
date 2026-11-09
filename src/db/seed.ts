@@ -6,6 +6,7 @@ import { count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
+import { findOrCreateOwner } from "./owner";
 import { contacts, notes, type NewContact, type NewNote } from "./schema";
 
 const CONTACT_COUNT = 1000;
@@ -495,7 +496,7 @@ function digits(length: number): string {
   return Array.from({ length }, () => randomInt(0, 9)).join("");
 }
 
-function generateContacts(now: number): NewContact[] {
+function generateContacts(now: number, ownerId: string): NewContact[] {
   // Sorted creation dates: the last inserted contact is also the most recently created one.
   const createdAtValues = Array.from({ length: CONTACT_COUNT }, () =>
     Math.round(now - DAY_MS - random() * HISTORY_DAYS * DAY_MS),
@@ -532,7 +533,7 @@ function generateContacts(now: number): NewContact[] {
     }
 
     const createdAt = new Date(createdAtValues[result.length]);
-    result.push({ name, about, howMet, phone, email, createdAt, updatedAt: createdAt });
+    result.push({ ownerId, name, about, howMet, phone, email, createdAt, updatedAt: createdAt });
   }
 
   return result;
@@ -578,8 +579,12 @@ async function main() {
       return;
     }
 
+    // The demo people belong to the owner (OWNER_EMAIL): nobody else sees them.
+    // Checked before anything is written, so a missing email leaves the database untouched.
+    const owner = await findOrCreateOwner(db, process.env.OWNER_EMAIL);
+
     const now = Date.now();
-    const newContacts = generateContacts(now);
+    const newContacts = generateContacts(now, owner.id);
 
     const noteCount = await db.transaction(async (tx) => {
       const inserted: { id: number; createdAt: Date }[] = [];

@@ -1,5 +1,7 @@
 # Production stack on the server. Run it through deploy.sh, which sets APP_IMAGE and the project name (-p prod).
-# Database settings come from .env next to this file (never in git): POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB.
+# Settings come from .env next to this file (never in git):
+#   database: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+#   login: OWNER_EMAIL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, SMTP_URL, MAIL_FROM
 
 x-logging: &logging
   driver: json-file
@@ -10,6 +12,12 @@ x-logging: &logging
 x-app-env: &app-env
   NODE_ENV: production
   DATABASE_URL: postgresql://${POSTGRES_USER:?set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?set POSTGRES_DB in .env}
+  # Login: the secret signs the cookies, the address is used in the links of the emails,
+  # SMTP_URL and MAIL_FROM say where and from whom the login emails are sent.
+  BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
+  BETTER_AUTH_URL: ${BETTER_AUTH_URL:?set BETTER_AUTH_URL in .env}
+  SMTP_URL: ${SMTP_URL:?set SMTP_URL in .env}
+  MAIL_FROM: ${MAIL_FROM:?set MAIL_FROM in .env}
 
 services:
   db:
@@ -31,24 +39,30 @@ services:
     logging: *logging
 
   # One-off container: applies migrations and exits. The deploy starts the new app only if it succeeds.
+  # OWNER_EMAIL: the login migration gives the contacts that existed before login to the user with this email.
   migrate:
     image: ${APP_IMAGE:?APP_IMAGE is set by deploy.sh}
     pull_policy: never
     profiles: [tools]
     command: ["node", "tools/migrate.js"]
-    environment: *app-env
+    environment:
+      <<: *app-env
+      OWNER_EMAIL: ${OWNER_EMAIL:?set OWNER_EMAIL in .env}
     depends_on:
       db:
         condition: service_healthy
     logging: *logging
 
   # One-off container: fills an EMPTY database with test contacts (it refuses a non-empty one).
+  # The test contacts belong to the user with OWNER_EMAIL.
   seed:
     image: ${APP_IMAGE:?APP_IMAGE is set by deploy.sh}
     pull_policy: never
     profiles: [tools]
     command: ["node", "tools/seed.js"]
-    environment: *app-env
+    environment:
+      <<: *app-env
+      OWNER_EMAIL: ${OWNER_EMAIL:?set OWNER_EMAIL in .env}
     depends_on:
       db:
         condition: service_healthy

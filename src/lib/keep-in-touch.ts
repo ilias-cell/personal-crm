@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, count, desc, gte, isNotNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { contacts, notes, type Contact, type TouchFrequency } from "@/db/schema";
@@ -38,7 +38,8 @@ const dueDay = sql`(${startDay} + ${period})::date`;
 // Counted as of this moment: now by the database clock, or a given moment (tests set "today" this way).
 export type OverdueOptions = { asOf?: Date };
 
-function trackedContacts({ asOf }: OverdueOptions) {
+// Only the contacts of the owner are looked at.
+function trackedContacts(ownerId: string, { asOf }: OverdueOptions) {
   const moment = asOf ? sql`${asOf.toISOString()}::timestamptz` : sql`now()`;
   const today = sql`(${moment} at time zone ${timeZone})::date`;
 
@@ -55,25 +56,34 @@ function trackedContacts({ asOf }: OverdueOptions) {
       overdueDays: sql<number>`${today} - ${dueDay}`.mapWith(Number).as("overdue_days"),
     })
     .from(contacts)
-    .where(isNotNull(contacts.touchFrequency))
+    .where(and(eq(contacts.ownerId, ownerId), isNotNull(contacts.touchFrequency)))
     .as("tracked_contacts");
 }
 
 // The person's period ended today or earlier. The longest overdue go first, equal ones by name.
-export async function listOverdueContacts(options: OverdueOptions = {}): Promise<OverdueContact[]> {
-  const tracked = trackedContacts(options);
+export async function listOverdueContacts(
+  ownerId: string,
+  options: OverdueOptions = {},
+): Promise<OverdueContact[]> {
+  const tracked = trackedContacts(ownerId, options);
   const people = await db
     .select()
     .from(tracked)
     .where(gte(tracked.overdueDays, 0))
     .orderBy(desc(tracked.overdueDays), asc(tracked.name), asc(tracked.id));
 
-  const groupsByContact = await listGroupsOfContacts(people.map((person) => person.id));
+  const groupsByContact = await listGroupsOfContacts(
+    ownerId,
+    people.map((person) => person.id),
+  );
   return people.map((person) => ({ ...person, groups: groupsByContact.get(person.id) ?? [] }));
 }
 
-export async function countOverdueContacts(options: OverdueOptions = {}): Promise<number> {
-  const tracked = trackedContacts(options);
+export async function countOverdueContacts(
+  ownerId: string,
+  options: OverdueOptions = {},
+): Promise<number> {
+  const tracked = trackedContacts(ownerId, options);
   const [row] = await db
     .select({ value: count() })
     .from(tracked)
@@ -82,10 +92,10 @@ export async function countOverdueContacts(options: OverdueOptions = {}): Promis
 }
 
 // Tells the two empty states of "Пора связаться" apart: nobody is overdue, or nobody has a frequency at all.
-export async function hasAnyTouchFrequency(): Promise<boolean> {
+export async function hasAnyTouchFrequency(ownerId: string): Promise<boolean> {
   const [row] = await db
     .select({ value: count() })
     .from(contacts)
-    .where(isNotNull(contacts.touchFrequency));
+    .where(and(eq(contacts.ownerId, ownerId), isNotNull(contacts.touchFrequency)));
   return row.value > 0;
 }

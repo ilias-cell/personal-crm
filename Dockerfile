@@ -13,8 +13,10 @@ FROM base AS build
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
 COPY . .
-# DATABASE_URL is only a placeholder: the build must not reach a database, and the value is not kept in the image.
-RUN DATABASE_URL=postgresql://build:build@127.0.0.1:1/build pnpm build && pnpm build:tools
+# DATABASE_URL and BETTER_AUTH_SECRET are only placeholders: the build must not reach a database, the build runs
+# with NODE_ENV=production and the login library refuses to start in production without a secret.
+# Both values exist for this one command only and are not kept in the image: the real ones come from .env at run time.
+RUN DATABASE_URL=postgresql://build:build@127.0.0.1:1/build BETTER_AUTH_SECRET=build-only-placeholder-not-a-real-secret-0123456789 pnpm build && pnpm build:tools
 
 FROM node:${NODE_VERSION}-slim AS runner
 ARG GIT_SHA=dev

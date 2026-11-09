@@ -1,4 +1,5 @@
-# Local development database. Connection settings come from .env (template: .env.example).
+# Local development services: the database and the mail catcher.
+# Database connection settings come from .env (template: .env.example).
 services:
   db:
     image: postgres:18
@@ -18,6 +19,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # Mail catcher: login emails sent by the app land here instead of real mailboxes.
+  mail:
+    image: axllent/mailpit:v1.33.1
+    restart: unless-stopped
+    ports:
+      # Published on localhost only. SMTP for the app, web page with the caught emails.
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
 
 volumes:
   db-data:
