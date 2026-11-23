@@ -8,6 +8,7 @@ import {
   PHONE_MAX_LENGTH,
   TEXT_MAX_LENGTH,
 } from "@/lib/contact-form";
+import { ownerToday, parseBirthDate } from "@/lib/birth-date";
 import { GROUP_NAME_MAX_LENGTH } from "@/lib/group-form";
 
 // Empty optional fields are stored as NULL, not as empty strings.
@@ -19,7 +20,7 @@ function optionalText(maxLength: number, tooLongMessage: string) {
     .transform((value) => (value === "" ? null : value));
 }
 
-export const contactSchema = z.object({
+const contactFields = z.object({
   name: z
     .string()
     .trim()
@@ -43,7 +44,40 @@ export const contactSchema = z.object({
   touchFrequency: z
     .enum(["", ...touchFrequency.enumValues] as const, { message: "Выберите вариант из списка" })
     .transform((value) => (value === "" ? null : value)),
+  // Checked together as one date below; here they only have to be text.
+  birthDay: z.string(),
+  birthMonth: z.string(),
+  birthYear: z.string(),
 });
+
+// The birthday is checked on the server by the same function the form's hints come from. Its one message goes
+// under the key "birthday", next to the mistakes of other fields, not instead of them. A valid date becomes
+// the three numbers of the table, all NULL when the date is empty.
+export const contactSchema = contactFields
+  .superRefine((fields, context) => {
+    const result = parseBirthDate(
+      { day: fields.birthDay, month: fields.birthMonth, year: fields.birthYear },
+      ownerToday(),
+    );
+    if (!result.ok)
+      context.addIssue({ code: "custom", message: result.message, path: ["birthday"] });
+  })
+  .transform(({ birthDay, birthMonth, birthYear, ...fields }, context) => {
+    const result = parseBirthDate(
+      { day: birthDay, month: birthMonth, year: birthYear },
+      ownerToday(),
+    );
+    if (!result.ok) {
+      context.issues.push({
+        code: "custom",
+        message: result.message,
+        path: ["birthday"],
+        input: fields,
+      });
+      return z.NEVER;
+    }
+    return { ...fields, ...result.value };
+  });
 
 export const noteSchema = z.object({
   body: z

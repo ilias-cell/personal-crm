@@ -22,6 +22,14 @@ const dateTimeFormat = new Intl.DateTimeFormat("ru-RU", {
   minute: "2-digit",
 });
 
+// A birthday has no time zone: the date is formatted from a fixed moment in UTC. The year 2000 is a leap one,
+// so "29 февраля" is written; it only lends the formatter a year and never reaches the database.
+const birthDayMonthFormat = new Intl.DateTimeFormat("ru-RU", {
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+});
+
 type PluralForms = { one: string; few: string; many: string };
 
 // Russian plural agreement: 1 контакт, 2 контакта, 5 контактов.
@@ -103,6 +111,30 @@ export function formatOverdue(days: number): string {
   if (days === 0) return "пора сегодня";
   const noun = pluralize(days, { one: "день", few: "дня", many: "дней" });
   return `просрочено на ${numberFormat.format(days)} ${noun}`;
+}
+
+type BirthDate = { birthDay: number | null; birthMonth: number | null; birthYear: number | null };
+
+// "14 марта 1990", "14 марта" when the year is unknown, "не указано" when there is no date.
+export function formatBirthDate({ birthDay, birthMonth, birthYear }: BirthDate): string {
+  if (birthDay === null || birthMonth === null) return "не указано";
+  const dayAndMonth = birthDayMonthFormat.format(
+    new Date(Date.UTC(2000, birthMonth - 1, birthDay)),
+  );
+  return birthYear === null ? dayAndMonth : `${dayAndMonth} ${birthYear}`;
+}
+
+// When the birthday comes: "Сегодня", "Завтра", "Через 2 дня", "Через 5 дней".
+export function formatBirthdayWhen(daysUntil: number): string {
+  if (daysUntil === 0) return "Сегодня";
+  if (daysUntil === 1) return "Завтра";
+  const noun = pluralize(daysUntil, { one: "день", few: "дня", many: "дней" });
+  return `Через ${numberFormat.format(daysUntil)} ${noun}`;
+}
+
+// "исполняется 36".
+export function formatTurningAge(age: number): string {
+  return `исполняется ${numberFormat.format(age)}`;
 }
 
 // Up to two initials: "Анна Смирнова" -> "АС", "Мама" -> "М".

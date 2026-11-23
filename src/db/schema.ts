@@ -1,11 +1,13 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   index,
   integer,
   pgEnum,
   pgTable,
   primaryKey,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -118,6 +120,11 @@ export const contacts = pgTable(
     howMet: text("how_met"),
     phone: text("phone"),
     email: text("email"),
+    // Birthday. Day and month are both set or both NULL; the year is optional, as it is often unknown.
+    // Three columns, not one date: a date needs a year, and a made-up year would be mistaken for a real one.
+    birthDay: smallint("birth_day"),
+    birthMonth: smallint("birth_month"),
+    birthYear: smallint("birth_year"),
     // NULL means "not set": the contact never shows up in "Пора связаться".
     touchFrequency: touchFrequency("touch_frequency"),
     // When the keep-in-touch period was started over: the frequency was changed to another value,
@@ -126,12 +133,24 @@ export const contacts = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  // The order of the main list inside one owner: newest first.
   (table) => [
+    // The order of the main list inside one owner: newest first.
     index("contacts_owner_created_at_idx").on(
       table.ownerId,
       table.createdAt.desc(),
       table.id.desc(),
+    ),
+    // The database refuses obvious rubbish. Whether the day exists in the calendar (31 April)
+    // is checked by the app, because it depends on the year.
+    check(
+      "contacts_birth_day_month_together",
+      sql`(${table.birthDay} is null) = (${table.birthMonth} is null)`,
+    ),
+    check("contacts_birth_day_range", sql`${table.birthDay} between 1 and 31`),
+    check("contacts_birth_month_range", sql`${table.birthMonth} between 1 and 12`),
+    check(
+      "contacts_birth_year_with_date",
+      sql`${table.birthYear} is null or (${table.birthDay} is not null and ${table.birthYear} >= 1900)`,
     ),
   ],
 );

@@ -57,6 +57,9 @@ async function EditContact({ params }: { params: Params }) {
           phone: contact.phone ?? "",
           email: contact.email ?? "",
           touchFrequency: contact.touchFrequency ?? "",
+          birthDay: contact.birthDay?.toString() ?? "",
+          birthMonth: contact.birthMonth?.toString() ?? "",
+          birthYear: contact.birthYear?.toString() ?? "",
         }}
         submitLabel="Сохранить"
         pendingLabel="Сохраняю…"

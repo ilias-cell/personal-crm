@@ -16,6 +16,22 @@ export const TOUCH_FREQUENCY_LABELS: Record<TouchFrequency, string> = {
   year: "Раз в год",
 };
 
+// The months for the list in the birthday field, in order: the value of an option is its number, 1-12.
+export const MONTH_NAMES = [
+  "январь",
+  "февраль",
+  "март",
+  "апрель",
+  "май",
+  "июнь",
+  "июль",
+  "август",
+  "сентябрь",
+  "октябрь",
+  "ноябрь",
+  "декабрь",
+] as const;
+
 export type ContactFormValues = {
   name: string;
   about: string;
@@ -24,9 +40,14 @@ export type ContactFormValues = {
   email: string;
   // A TouchFrequency value, or "" for "Не задано".
   touchFrequency: string;
+  // The birthday, as typed: the day and the year are text, the month is "1".."12" or "" for the empty choice.
+  birthDay: string;
+  birthMonth: string;
+  birthYear: string;
 };
 
-export type ContactFormField = keyof ContactFormValues;
+// The birthday is three form fields with one error: it sits under the whole group, under this key.
+export type ContactFormField = keyof ContactFormValues | "birthday";
 
 export type ContactFormState = {
   // What the user typed, returned back so a failed submit does not wipe the form.
