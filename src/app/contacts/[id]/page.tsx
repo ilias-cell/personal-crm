@@ -13,7 +13,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TOUCH_FREQUENCY_LABELS } from "@/lib/contact-form";
 import { getContact, listNotes, parseContactId } from "@/lib/contacts";
-import { formatDate, formatDateTime, formatNoteCount } from "@/lib/format";
+import { formatBirthDate, formatDate, formatDateTime, formatNoteCount } from "@/lib/format";
 import { listContactGroups, listGroups } from "@/lib/groups";
 import { getCurrentUser, requireUser } from "@/lib/session";
 
@@ -105,6 +105,10 @@ async function ContactCard({ params }: { params: Params }) {
               {contact.email}
             </a>
           )}
+        </DetailRow>
+        <DetailRow label="День рождения">
+          {/* The empty row says «не указано» itself, in the style of the other rows. */}
+          {contact.birthDay !== null && formatBirthDate(contact)}
         </DetailRow>
         <DetailRow label="Как часто общаться">
           {contact.touchFrequency && TOUCH_FREQUENCY_LABELS[contact.touchFrequency]}

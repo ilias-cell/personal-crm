@@ -41,6 +41,9 @@ function readContactForm(formData: FormData): ContactFormValues {
     phone: readText(formData, "phone"),
     email: readText(formData, "email"),
     touchFrequency: readText(formData, "touchFrequency"),
+    birthDay: readText(formData, "birthDay"),
+    birthMonth: readText(formData, "birthMonth"),
+    birthYear: readText(formData, "birthYear"),
   };
 }
 

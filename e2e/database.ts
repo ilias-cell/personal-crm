@@ -215,3 +215,18 @@ export async function insertGroupWithPeople(
     }
   });
 }
+
+// A contact with a birthday. The year is left out when it is unknown.
+export async function insertContactWithBirthday(
+  ownerId: string,
+  name: string,
+  { day, month, year = null }: { day: number; month: number; year?: number | null },
+): Promise<void> {
+  await withDatabase((client) =>
+    client.query(
+      `insert into contacts (name, owner_id, birth_day, birth_month, birth_year)
+       values ($1, $2, $3, $4, $5)`,
+      [name, ownerId, day, month, year],
+    ),
+  );
+}

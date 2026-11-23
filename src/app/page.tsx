@@ -16,6 +16,7 @@ import { ContactListPagination } from "@/components/contact-list-pagination";
 import { GroupBadge } from "@/components/group-badge";
 import { GroupFilter } from "@/components/group-filter";
 import { SearchInput, SearchInputFallback } from "@/components/search-input";
+import { UpcomingBirthdays } from "@/components/upcoming-birthdays";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Empty,
@@ -72,6 +73,12 @@ export default function ContactsPage({ searchParams }: PageProps<"/">) {
       {/* "Все контакты" on other pages leads back to this page and search. */}
       <Suspense fallback={null}>
         <RememberContactListHref />
+      </Suspense>
+
+      {/* Who has a birthday this week. No birthdays, no block; it does not depend on the search, the group or the page.
+          It appears when the data has come, and moves the search down: mostly there is no block, so no skeleton. */}
+      <Suspense fallback={null}>
+        <UpcomingBirthdays />
       </Suspense>
 
       {/* Stays on screen while scrolling a long list, so search is always one click away. */}

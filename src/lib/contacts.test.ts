@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { db } from "@/db";
-import { notes, type User } from "@/db/schema";
+import { contacts, notes, type User } from "@/db/schema";
 import { countContacts, countNotes, getContact, listContacts, listNotes } from "@/lib/contacts";
 import {
   addToGroup,
@@ -12,6 +12,9 @@ import {
   insertManyContacts,
   insertUser,
 } from "@/test/factories";
+
+// The columns of the table by their code names, to check a test does not use a column that is missing.
+const contactsColumns = contacts;
 
 // The user whose data a test works with; every test starts with its own, because the tables are emptied.
 let owner: User;
@@ -247,5 +250,52 @@ describe("contacts of other users", () => {
     expect((await listNotes(other.id, foreign.id)).map((note) => note.body)).toEqual([
       "Встретились",
     ]);
+  });
+});
+
+describe("birth date of a contact", () => {
+  it("is stored in full, with a known year", async () => {
+    const created = await insertContact(owner.id, "Анна", {
+      birthDay: 14,
+      birthMonth: 3,
+      birthYear: 1990,
+    });
+
+    const read = await getContact(owner.id, created.id);
+
+    expect([read?.birthDay, read?.birthMonth, read?.birthYear]).toEqual([14, 3, 1990]);
+  });
+
+  it("is stored without a year", async () => {
+    const created = await insertContact(owner.id, "Борис", { birthDay: 29, birthMonth: 2 });
+
+    const read = await getContact(owner.id, created.id);
+
+    expect([read?.birthDay, read?.birthMonth, read?.birthYear]).toEqual([29, 2, null]);
+  });
+
+  it("is empty when not given", async () => {
+    const created = await insertContact(owner.id, "Вера");
+
+    const read = await getContact(owner.id, created.id);
+
+    expect([read?.birthDay, read?.birthMonth, read?.birthYear]).toEqual([null, null, null]);
+  });
+
+  // The database refuses obvious rubbish even if the app code is bypassed.
+  it.each([
+    ["a day without a month", { birthDay: 14 }],
+    ["a month without a day", { birthMonth: 3 }],
+    ["a year without a day and a month", { birthYear: 1990 }],
+    ["day 0", { birthDay: 0, birthMonth: 3 }],
+    ["day 32", { birthDay: 32, birthMonth: 3 }],
+    ["month 0", { birthDay: 14, birthMonth: 0 }],
+    ["month 13", { birthDay: 14, birthMonth: 13 }],
+    ["a year before 1900", { birthDay: 14, birthMonth: 3, birthYear: 1899 }],
+  ])("is refused by the database: %s", async (_title, values) => {
+    // Without the columns in the schema the insert would silently ignore these values, so check they exist.
+    expect(Object.keys(values).every((key) => key in contactsColumns)).toBe(true);
+
+    await expect(insertContact(owner.id, "Глеб", values)).rejects.toThrow();
   });
 });

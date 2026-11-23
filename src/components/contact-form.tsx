@@ -5,17 +5,25 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import {
   EMAIL_MAX_LENGTH,
   initialContactFormState,
+  MONTH_NAMES,
   NAME_MAX_LENGTH,
   PHONE_MAX_LENGTH,
   TEXT_MAX_LENGTH,
   TOUCH_FREQUENCY_LABELS,
-  type ContactFormField,
   type ContactFormState,
   type ContactFormValues,
 } from "@/lib/contact-form";
@@ -27,10 +35,13 @@ const EMPTY_VALUES: ContactFormValues = {
   phone: "",
   email: "",
   touchFrequency: "",
+  birthDay: "",
+  birthMonth: "",
+  birthYear: "",
 };
 
 type FieldConfig = {
-  name: ContactFormField;
+  name: keyof ContactFormValues;
   label: string;
   placeholder: string;
   maxLength: number;
@@ -150,6 +161,7 @@ function ContactFormFields({
             </Field>
           );
         })}
+        <BirthdayField values={values} error={state.fieldErrors.birthday} />
         <TouchFrequencyField
           value={values.touchFrequency}
           error={state.fieldErrors.touchFrequency}
@@ -212,5 +224,80 @@ function TouchFrequencyField({ value, error }: { value: string; error: string | 
       </FieldDescription>
       {error && <FieldError id={errorId}>{error}</FieldError>}
     </Field>
+  );
+}
+
+// Three controls, one date and one error. Without a year the date is still saved; the server checks the rest.
+// The error belongs to the whole group, and every control is marked, so the focus goes to the first one (the day).
+function BirthdayField({
+  values,
+  error,
+}: {
+  values: Pick<ContactFormValues, "birthDay" | "birthMonth" | "birthYear">;
+  error: string | undefined;
+}) {
+  const descriptionId = "contact-birthday-description";
+  const errorId = "contact-birthday-error";
+  const invalid = error ? true : undefined;
+  return (
+    <FieldSet
+      data-invalid={invalid}
+      aria-describedby={error ? `${descriptionId} ${errorId}` : descriptionId}
+      className="gap-2 data-[invalid=true]:text-destructive"
+    >
+      <FieldLegend variant="label" className="mb-0">
+        День рождения
+      </FieldLegend>
+      <div className="flex flex-wrap gap-2">
+        <Input
+          id="contact-birthDay"
+          name="birthDay"
+          aria-label="День"
+          placeholder="День"
+          inputMode="numeric"
+          maxLength={2}
+          autoComplete="off"
+          defaultValue={values.birthDay}
+          aria-invalid={invalid}
+          aria-describedby={error ? errorId : undefined}
+          className="h-10 w-24 text-base"
+        />
+        {/* After a failed save React resets the form, and a select falls back to the option it was first
+            rendered with. Keying it by the value makes it render again with the choice the user sent. */}
+        <NativeSelect
+          key={values.birthMonth}
+          id="contact-birthMonth"
+          name="birthMonth"
+          aria-label="Месяц"
+          defaultValue={values.birthMonth}
+          aria-invalid={invalid}
+          className="w-44 [&>select]:h-10 [&>select]:text-base"
+        >
+          <NativeSelectOption value="">Месяц</NativeSelectOption>
+          {MONTH_NAMES.map((month, index) => (
+            <NativeSelectOption key={month} value={String(index + 1)}>
+              {month}
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
+        <Input
+          id="contact-birthYear"
+          name="birthYear"
+          aria-label="Год"
+          placeholder="Год, напр. 1990"
+          inputMode="numeric"
+          maxLength={4}
+          autoComplete="off"
+          defaultValue={values.birthYear}
+          aria-invalid={invalid}
+          className="h-10 w-40 text-base"
+        />
+      </div>
+      <FieldDescription id={descriptionId}>
+        Год можно не указывать. Если день рождения в ближайшие 7 дней, человек появится на главной в
+        блоке «Скоро день рождения».
+      </FieldDescription>
+      {error && <FieldError id={errorId}>{error}</FieldError>}
+    </FieldSet>
   );
 }
