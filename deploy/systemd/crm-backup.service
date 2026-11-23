@@ -1,0 +1,10 @@
+# Daily backup of the production database. Started by crm-backup.timer; the output goes to the journal.
+# Installed on the server by deploy.sh (prod).
+[Unit]
+Description=Daily backup of the CRM production database
+
+[Service]
+Type=oneshot
+User=crmapp
+WorkingDirectory=/home/crmapp/crm
+ExecStart=/home/crmapp/crm/backup-daily.sh

@@ -1,21 +1,15 @@
-name: Deploy
+name: Deploy staging
 
-# Push to main -> image tagged with the commit SHA in GHCR -> on the server: database backup, migrations, new image, smoke /health.
+# Push to main -> one image tagged with the commit SHA in GHCR -> the test stand: migrations, new image, smoke /health.
+# Prod is NOT rolled out here: it is rolled out only by the "Deploy prod" workflow, started by hand.
+# "Deploy prod" takes the commit of the latest green run of this workflow, so the name of this file matters for it.
 # All server logic lives in deploy/; this file only builds the image and calls those scripts.
 on:
   push:
     branches: [main]
 
-# Two deploys must never run at once; a newer one waits instead of cancelling a running one.
-concurrency:
-  group: deploy
-  cancel-in-progress: false
-
 permissions:
   contents: read
-
-env:
-  APP_DOMAIN: app.therooks.ru
 
 jobs:
   build:
@@ -52,9 +46,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
+  deploy-staging:
     needs: build
     runs-on: ubuntu-latest
+    # Two deploys must never run at once on one environment; a newer one waits instead of cancelling a running one.
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
     permissions:
       contents: read
       packages: read
@@ -69,28 +67,13 @@ jobs:
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
-        run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          cat > ~/.ssh/config <<EOF
-          Host server
-            HostName $DEPLOY_HOST
-            User $DEPLOY_USER
-            IdentityFile ~/.ssh/deploy_key
-            IdentitiesOnly yes
-            StrictHostKeyChecking yes
-          EOF
+        run: deploy/prepare-ssh.sh
 
       - name: Copy deploy scripts to the server
-        run: tar -C deploy -cf - . | ssh server 'mkdir -p ~/crm && tar -xf - -C ~/crm'
+        run: tar -C deploy -cf - . | ssh server 'mkdir -p ~/crm-staging && tar -xf - -C ~/crm-staging'
 
-      - name: Roll out the new image
+      - name: Roll out the new image on the test stand
         env:
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REGISTRY_USER: ${{ github.actor }}
-        run: printf '%s\n' "$REGISTRY_TOKEN" | ssh server "~/crm/deploy.sh '$IMAGE' '$REGISTRY_USER'"
-
-      - name: Smoke test from outside
-        run: deploy/smoke.sh "https://$APP_DOMAIN/health" "${GITHUB_SHA}" 60
+        run: printf '%s\n' "$REGISTRY_TOKEN" | ssh server "~/crm-staging/deploy.sh staging '$IMAGE' '$REGISTRY_USER'"

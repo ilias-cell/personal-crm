@@ -1,7 +1,43 @@
 # Shared helpers for the scripts in this folder. Sourced by them, never run on its own.
-# Every script cd's into this folder first, so all paths here are relative to ~/crm on the server.
+# Every script cd's into this folder first, so all paths here are relative to the folder of the environment
+# on the server: ~/crm for prod, ~/crm-staging for the test stand.
 
-project=prod
+# set_env <prod|staging>: picks the environment and sets everything that differs between the two.
+# The same scripts and the same compose.yaml serve both; only the values below change.
+# It refuses to run in the folder of the other environment, so the stand can never start with the production .env.
+set_env() {
+  env_name=${1:-}
+  case $env_name in
+    prod)
+      project=prod
+      env_folder=crm
+      app_domain=app.therooks.ru
+      app_port=3001
+      app_mem_limit=0 # 0 = no limit, as it has always been
+      db_mem_limit=0
+      backup_before_deploy=yes
+      ;;
+    staging)
+      project=staging
+      env_folder=crm-staging
+      app_domain=test-app.therooks.ru
+      app_port=3002
+      app_mem_limit=384m
+      db_mem_limit=256m
+      backup_before_deploy=no
+      ;;
+    *)
+      fail "unknown environment \"$env_name\": use prod or staging."
+      ;;
+  esac
+
+  if [ "$(basename "$PWD")" != "$env_folder" ]; then
+    fail "the $env_name environment runs only from ~/$env_folder, but this script is in $PWD. Nothing was done."
+  fi
+
+  # Read by compose.yaml.
+  export APP_PORT=$app_port APP_MEM_LIMIT=$app_mem_limit DB_MEM_LIMIT=$db_mem_limit
+}
 
 compose() {
   docker compose -p "$project" -f compose.yaml --env-file .env "$@"
@@ -35,13 +71,16 @@ require_env() {
   fi
 }
 
-# deploy.sh and restore.sh must never run at the same time: both stop, change or replace the database and the app.
-# The lock is held until the script exits.
+# Scripts of one environment must never run at the same time: they stop, change or replace its database and app.
+# The lock is held until the script exits. Each environment has its own lock (its own state/ folder),
+# so a deploy of the stand does not wait for a deploy of prod.
+#   take_lock          fails at once if the lock is taken
+#   take_lock <sec>    waits up to <sec> seconds for it (used by the daily backup: it waits for a running deploy)
 take_lock() {
   mkdir -p state
   exec 9>state/.lock
-  if ! flock -n 9; then
-    fail "another deploy.sh or restore.sh is running right now (lock $PWD/state/.lock). Wait for it to finish and run again."
+  if ! flock -w "${1:-0}" 9; then
+    fail "another script of this environment is running right now (lock $PWD/state/.lock). Wait for it to finish and run again."
   fi
 }
 

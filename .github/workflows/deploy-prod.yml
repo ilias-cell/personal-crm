@@ -1,0 +1,128 @@
+name: Deploy prod
+
+# The only way to roll out to prod. Started by hand: Actions -> Deploy prod -> Run workflow (branch main).
+#   SHA field empty  -> the commit of the latest green "Deploy staging" run
+#   SHA typed by hand -> only a commit that has a green "Deploy staging" run (a fallback)
+#   "rollback" ticked -> the version prod ran before the current one (the server remembers it); no test stand check,
+#                        the SHA field is ignored
+# Prod: database backup -> migrations -> new image -> smoke /health -> daily backup timer -> image clean-up.
+# All server logic lives in deploy/; this file only calls those scripts. The SHA that was rolled out is in the run summary.
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Commit SHA to roll out. Leave empty: the latest commit that passed the test stand"
+        required: false
+        default: ""
+        type: string
+      rollback:
+        description: "Rollback: go back to the previous prod version (the SHA field is ignored)"
+        required: false
+        default: false
+        type: boolean
+
+# Two prod deploys must never run at once; a newer one waits instead of cancelling a running one.
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  APP_DOMAIN: app.therooks.ru
+
+jobs:
+  deploy:
+    name: Deploy prod
+    runs-on: ubuntu-latest
+    # Scripts are taken from the branch the run was started on: only main is allowed.
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: read
+      actions: read # to read the history of "Deploy staging" runs
+    env:
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Choose the commit (test stand check)
+        if: ${{ !inputs.rollback }}
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_SHA: ${{ inputs.sha }}
+        run: deploy/pick-prod-image.sh
+
+      - name: Prepare ssh
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: deploy/prepare-ssh.sh
+
+      - name: Copy deploy scripts to the server
+        run: tar -C deploy -cf - . | ssh server 'mkdir -p ~/crm && tar -xf - -C ~/crm'
+
+      - name: Roll out the new image
+        if: ${{ !inputs.rollback }}
+        env:
+          IMAGE: ${{ steps.pick.outputs.image }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_USER: ${{ github.actor }}
+        run: printf '%s\n' "$REGISTRY_TOKEN" | ssh server "~/crm/deploy.sh prod '$IMAGE' '$REGISTRY_USER'"
+
+      - name: Roll back to the previous version
+        if: ${{ inputs.rollback }}
+        run: |
+          # No registry: the image of the previous version is already on the server.
+          ssh server 'cd ~/crm && [ -s state/previous ] || { echo "ERROR: the server has no previous version to go back to." >&2; exit 1; }'
+          ssh server '~/crm/deploy.sh prod "$(cat ~/crm/state/previous)"'
+
+      - name: Which version is live now
+        id: live
+        run: |
+          image=$(ssh server 'cat ~/crm/state/current')
+          echo "sha=${image##*:}" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test from outside
+        env:
+          SHA: ${{ steps.live.outputs.sha }}
+        run: deploy/smoke.sh "https://$APP_DOMAIN/health" "$SHA" 60
+
+      - name: Summary
+        env:
+          SHA: ${{ steps.live.outputs.sha }}
+          MODE: ${{ inputs.rollback && 'rollback to the previous version' || 'new version' }}
+        run: |
+          {
+            echo "## Prod: $MODE"
+            echo
+            echo "Rolled out: [\`$SHA\`]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$SHA)"
+            echo
+            echo "Check: https://$APP_DOMAIN/health must show this SHA as \`version\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # A separate job: if the clean-up of the registry fails, the rollout above stays green.
+  clean-registry:
+    name: Clean up the registry
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Package name
+        id: package
+        run: |
+          name=${GITHUB_REPOSITORY#*/}
+          echo "name=${name,,}" >> "$GITHUB_OUTPUT"
+
+      # GHCR keeps the 10 newest builds; older ones are deleted. Prod rollback does not need them:
+      # the server keeps its own images (see deploy/deploy.sh).
+      # Needs once, in GitHub: the package -> Package settings -> Manage Actions access -> this repository with the Admin role.
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ steps.package.outputs.name }}
+          package-type: container
+          min-versions-to-keep: 10

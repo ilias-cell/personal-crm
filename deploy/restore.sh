@@ -21,6 +21,9 @@ cd "$(dirname "$0")"
 # shellcheck source=deploy/lib.sh
 . ./lib.sh
 
+# Restoring is for production only; the test stand database is rebuilt by refresh-staging-db.sh.
+set_env prod
+
 require_env
 take_lock
 
@@ -97,7 +100,7 @@ echo "==> Starting the app (same version $version)"
 compose up -d --no-deps app </dev/null || abort "could not start the app."
 
 echo "==> Smoke test"
-if ! ./smoke.sh http://127.0.0.1:3001/health "$version" 90; then
+if ! ./smoke.sh "http://127.0.0.1:$app_port/health" "$version" 90; then
   compose logs --tail 40 app >&2 || true
   echo "ERROR: the database was restored, but the app does not pass /health." >&2
   echo "The database as it was before this restore: $safety_copy (to put it back: ~/crm/restore.sh $safety_copy)" >&2

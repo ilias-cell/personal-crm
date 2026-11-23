@@ -2,8 +2,9 @@
 # Takes a backup of the production database into ~/crm/backups.
 #
 # Usage: backup.sh <kind>
-#   <kind>  what the backup is for, it starts the file name: deploy (made by deploy.sh), before-restore
-#           (made by restore.sh), manual (taken by hand). Only "deploy" backups are ever cleaned up automatically.
+#   <kind>  what the backup is for, it starts the file name: deploy (made by deploy.sh), daily (made by the timer,
+#           see backup-daily.sh), before-restore (made by restore.sh), manual (taken by hand).
+#           Only "deploy" and "daily" backups are cleaned up automatically: the newest 7 of each kind are kept.
 #
 # File name: <kind>-<UTC date YYYYmmdd-HHMMSS>-<app version running at that moment>.dump
 # The full path of the new file is printed as the last line on stdout; everything else goes to stderr.
@@ -13,6 +14,12 @@ set -euo pipefail
 cd "$(dirname "$0")"
 # shellcheck source=deploy/lib.sh
 . ./lib.sh
+
+# Backups exist only for production (the test stand gets its data from them, see refresh-staging-db.sh).
+set_env prod
+
+# Backups kept per kind (deploy, daily).
+keep_backups=7
 
 kind=${1:?usage: backup.sh <kind>}
 if ! [[ $kind =~ ^[a-z][a-z-]*$ ]]; then
@@ -52,4 +59,18 @@ fi
 mv "$partial" "$file"
 trap - EXIT
 echo "Backup saved: $PWD/$file ($(du -h "$file" | cut -f1))" >&2
+
+# Clean-up runs only after the new backup is safely in place, so a failed backup never costs an old one.
+case $kind in
+  deploy | daily)
+    echo "Cleaning up old $kind backups (keeping the newest $keep_backups)" >&2
+    # The UTC date in the name makes name order the same as time order.
+    find backups -maxdepth 1 -type f -name "$kind-*.dump" \
+      | sort -r \
+      | tail -n +$((keep_backups + 1)) \
+      | xargs -r rm -f -- \
+      || true
+    ;;
+esac
+
 echo "$PWD/$file"

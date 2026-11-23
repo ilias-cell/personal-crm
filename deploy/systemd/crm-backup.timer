@@ -1,0 +1,12 @@
+# Runs crm-backup.service every day at 03:00 Moscow time (the server itself is on UTC).
+# Persistent: if the server was off at that time, the backup is taken right after it starts.
+# Installed on the server by deploy.sh (prod).
+[Unit]
+Description=Daily backup of the CRM production database
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 Europe/Moscow
+Persistent=true
+
+[Install]
+WantedBy=timers.target
