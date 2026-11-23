@@ -270,7 +270,37 @@ Next.js умеет отправлять своим разработчикам а
 ssh crm 'cd ~/crm-staging && ./deploy.sh staging "$(cat state/previous)"'
 ```
 
-Логи приложения на сервере: `ssh crm 'docker logs --tail 50 prod-app-1'` (стенд: `staging-app-1`).
+Логи приложения и базы — в журнале сервера, см. «Как читать логи».
+
+### Как читать логи
+
+Логи контейнеров (приложение и база, прод и стенд) пишутся в журнал сервера (journald). Они переживают выкатку, откат и пересоздание контейнера. Размер журнала ограничивает сама система: когда место заканчивается, удаляются самые старые строки, диск не забивается.
+
+У каждого контейнера своя метка — его имя: `prod-app-1`, `prod-db-1`, `staging-app-1`, `staging-db-1`. Команды выполняются с компьютера, `sudo` на сервере работает без пароля.
+
+```bash
+# последние 50 строк приложения на проде
+ssh crm 'sudo journalctl -t prod-app-1 -n 50 --no-pager'
+
+# то же на стенде
+ssh crm 'sudo journalctl -t staging-app-1 -n 50 --no-pager'
+
+# только за последний час / за сегодня
+ssh crm 'sudo journalctl -t prod-app-1 --since "1 hour ago" --no-pager'
+ssh crm 'sudo journalctl -t prod-app-1 --since today --no-pager'
+
+# найти строки со словом error
+ssh crm 'sudo journalctl -t prod-app-1 --since today --no-pager | grep -i error'
+
+# база данных
+ssh crm 'sudo journalctl -t prod-db-1 -n 50 --no-pager'
+```
+
+Следить за логом вживую: `ssh crm 'sudo journalctl -t prod-app-1 -f'` (выход — `Ctrl+C`).
+
+Коротко посмотреть логи текущего контейнера можно и так: `ssh crm 'docker logs --tail 50 prod-app-1'`, но после пересоздания контейнера (например, при выкатке) эта команда покажет только новый контейнер, а `journalctl` — всю историю.
+
+Сколько места занимает журнал: `ssh crm 'journalctl --disk-usage'`.
 
 ### Чистка старых образов
 
@@ -350,7 +380,7 @@ ssh -t crm '~/crm-staging/refresh-staging-db.sh'
 - После входа видны контакты, скопированные с прода. Новый контакт на стенде на проде не появляется.
 - В браузере (DevTools → Application → Cookies) у куки входа на стенде нет `Domain`; на <https://app.therooks.ru> вход со стенда не действует.
 - `ssh crm 'docker stats --no-stream'` — у `staging-*` виден лимит памяти (384 МБ и 256 МБ).
-- Логи: `ssh crm 'docker logs --tail 50 staging-app-1'`.
+- Логи: `ssh crm 'sudo journalctl -t staging-app-1 -n 50 --no-pager'` (подробнее — «Как читать логи»).
 
 ### Настройка входа на сервере
 
