@@ -4,11 +4,13 @@
 #   database: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
 #   login: OWNER_EMAIL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, SMTP_URL, MAIL_FROM
 
+# Container logs go to the server journal (journald): they survive recreating a container, a deploy and a rollback.
+# The journal size is limited by the system, so old lines are deleted and the disk does not fill up.
+# The tag is the container name (prod-app-1, staging-db-1, ...): journalctl -t prod-app-1
 x-logging: &logging
-  driver: json-file
+  driver: journald
   options:
-    max-size: "10m"
-    max-file: "3"
+    tag: "{{.Name}}"
 
 x-app-env: &app-env
   NODE_ENV: production
